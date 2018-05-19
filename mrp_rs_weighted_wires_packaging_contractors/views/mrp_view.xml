@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Bill of Materials -->
+        <record id="mrp_bom_form_view_inh1" model="ir.ui.view">
+            <field name="name">mrp.bom.form</field>
+            <field name="model">mrp.bom</field>
+            <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+            <field name="arch" type="xml">
+            	<field name="type" position="after">
+            		<field name="package_or_wire" widget="radio"/>
+            		<field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished'])],'required':[('package_or_wire','in',['weighted_wire'])]}" options="{'no_open':True, 'no_create': True,'no_edit': True}"/>
+            	</field>
+            </field>
+        </record>
+
+        <record id="mrp_production_form_view_inh2" model="ir.ui.view">
+            <field name="name">mrp.production.form.inh</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp.mrp_production_form_view" />
+            <field name="arch" type="xml">
+            	<field name="bom_id" position="replace"/>
+            	<field name="product_id" position="after">
+            		<field name="bom_id"
+                        domain="['&amp;', '|',
+                                    ('product_id','=',product_id),
+                                    '&amp;',
+                                        ('product_tmpl_id.product_variant_ids','=',product_id),
+                                        ('product_id','=',False),
+                                        ('type', '=', 'normal')]"
+                        context="{'default_product_tmpl_id': product_tmpl_id}" required="1" attrs="{'readonly': [('has_moves', '=', True)]}"/>
+                    <field name="package_or_wire" invisible="1"/>
+                    <field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished'])],'required':[('package_or_wire','in',['weighted_wire'])]}"/>
+                </field>
+                <notebook position="inside">
+                    <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished']),('package_or_wire','=', False)]}">
+                        <field name="weighted_wire_lines" context="{'default_wire_used': wire_used}" options='{"reload_on_button": True}' attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
+                            <tree editable="bottom" decoration-muted="state in ('done')">
+                                <field name="wire_used" required="1"/>
+                                <field name="wire_date" required="1"/>
+                                <field name="issued_to"/>
+                                <field name="wire_issued" required="1"/>
+                                <field name="qty_produced"/>
+                                <field name="mo_id" invisible="1"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
+                        <group>
+                            <field name="wire_qty" invisible="1"/>
+                            <button name="change_prod_qty_custom" string="Approve"
+                            colspan="1" type="object" class="btn-primary" context="{'wire_approve':True}"/>
+                        </group>
+                    </page>
+
+                    <page string="Packaging Details" attrs="{'invisible': ['|',('package_or_wire','in',['none', 'weighted_wire']),('package_or_wire','=', False)]}">
+                        <field name="packaging_lines" attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
+                            <tree editable="bottom" decoration-muted="state in ('done','cancel')">
+                                <field name="polished_by" required="1"/>
+                                <field name="packed_by" required="1"/>
+                                <field name="package_date"/>
+                                <field name="qty"/>
+                                <field name="mo_id" invisible="1"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
+                        <group>
+                            <field name="packaging_qty" invisible="1"/>
+                            <button name="change_prod_qty_custom" required="1" string="Approve"
+                            colspan="1" type="object" class="btn-primary" context="{'package_approve':True}"/>
+                        </group>
+                    </page>
+                </notebook>
+           	</field>
+        </record>
+
+        <record id="mrp_contractor_tree_view" model="ir.ui.view">
+            <field name="name">mrp.contractor.tree</field>
+            <field name="model">mrp.contractor</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="name"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="active_contractor"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="mrp_contractor_action" model="ir.actions.act_window">
+            <field name="name">Contractors</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">mrp.contractor</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+
+        <menuitem id="menu_mrp_contractor"
+            action="mrp_contractor_action"
+            parent="mrp.menu_mrp_bom"
+            sequence="10"/>
+    </data>
+</odoo>

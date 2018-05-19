@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">	
+		<record id="product_weighted_wire" model="product.template">
+            <field name="name">Weighted Wire</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+            <field name="standard_price">0.0</field>
+            <field name="list_price">0.0</field>
+            <field name="type">product</field>
+            <field name="uom_id" ref="product.product_uom_gram"/>
+            <field name="uom_po_id" ref="product.product_uom_gram"/>
+            <field name="default_code"></field>
+            <field name="purchase_line_warn">no-message</field>
+        </record>
+    </data>
+</odoo>
