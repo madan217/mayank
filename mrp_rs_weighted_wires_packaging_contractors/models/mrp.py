@@ -175,7 +175,7 @@ class weightedWireLine(models.Model):
             if wr.wire_used and (wr.wire_used.weight > 0):
                 wr.qty_produced = wr.wire_issued / (wr.wire_used.weight/1000)
 
-    wire_date = fields.Date('Date', default=date.today(),
+    wire_date = fields.Date('Date', default=fields.Date.context_today,
                 readonly=True, states={'draft': [('readonly', False)]})
     wire_used = fields.Many2one(
     	'product.product', 
@@ -236,7 +236,7 @@ class packagingLine(models.Model):
     _description = 'Packaging Lines'
 
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
-    package_date = fields.Date('Date', default=date.today(),
+    package_date = fields.Date('Date', default=fields.Date.context_today,
         readonly=True, states={'draft': [('readonly', False)]})
     polished_by = fields.Many2one('mrp.contractor', 'Polished By',
         readonly=True, states={'draft': [('readonly', False)]})
