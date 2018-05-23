@@ -318,4 +318,7 @@ class MrpProductProduceInh(models.TransientModel):
         if self.production_id.packaging_lines:
             for pl in self.production_id.packaging_lines:
                 pl.state = 'done'
+        if self.production_id.operation_lines:
+            for ol in self.production_id.operation_lines:
+                ol.state = 'done'
         return res

@@ -96,7 +96,7 @@
                             </tree>
                         </field>
                         <group>
-                            <field name="operation_qty" invisible="0"/>
+                            <field name="operation_qty" invisible="1"/>
                             <button name="change_prod_qty_custom" required="1" string="Approve"
                             colspan="1" type="object" class="btn-primary" context="{'operation_approve':True}"/>
                         </group>
