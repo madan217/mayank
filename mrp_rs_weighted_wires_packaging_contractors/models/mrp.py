@@ -27,6 +27,14 @@ class mrpProductionInh(models.Model):
                 total += pl.qty
             mr.packaging_qty = total
 
+    @api.depends('operation_lines')
+    def compute_operation_qty(self):
+        for mr in self:
+            total = 0.0
+            for ol in mr.operation_lines:
+                total += ol.qty
+            mr.operation_qty = total
+
     wire_used = fields.Many2one(
     	'product.product', 
     	string='Wire Used',
@@ -35,14 +43,17 @@ class mrpProductionInh(models.Model):
     package_or_wire = fields.Selection([
         ('weighted_wire', 'Uses Weighted Wire'),
         ('polished', 'Polished/Packed'),
+        ('open_counter', 'Open/Counter'),
         ('none', 'None')], related="bom_id.package_or_wire", string='Wire Or Polished',
         default='none')
     weighted_wire_lines = fields.One2many(
         'weighted.wire.line', 'mo_id', string='Weighted Wire Lines')
     packaging_lines = fields.One2many(
         'packaging.line', 'mo_id', string='Packaging Lines')
+    operation_lines = fields.One2many('operation.detail.line', 'mo_id', string='Operation Lines')
     wire_qty = fields.Float('Qty Produced', compute="compute_wire_qty", store=True, default=0.00)
     packaging_qty = fields.Float('Qty Produced', compute="compute_packaging_qty", store=True, default=0.00)
+    operation_qty = fields.Float('Qty Produced', compute="compute_operation_qty", store=True, default=0.00)
 
     @api.onchange('bom_id')
     def onchange_bom_id(self):
@@ -95,6 +106,12 @@ class mrpProductionInh(models.Model):
                 if wizard.packaging_qty < produced:
                     raise UserError(_("You have already processed %d. Please input a quantity higher than %d ")%(produced, produced))
                 production.write({'product_qty': wizard.packaging_qty})
+            elif wizard._context.get('operation_approve', False):
+                if wizard.operation_qty < wizard.product_qty:
+                    raise UserError(_("Approve quantity must be higher than quantity to produce"))
+                if wizard.operation_qty < produced:
+                    raise UserError(_("You have already processed %d. Please input a quantity higher than %d ")%(produced, produced))
+                production.write({'product_qty': wizard.operation_qty})
             done_moves = production.move_finished_ids.filtered(lambda x: x.state == 'done' and x.product_id == production.product_id)
             qty_produced = production.product_id.uom_id._compute_quantity(sum(done_moves.mapped('product_qty')), production.product_uom_id)
             factor = production.product_uom_id._compute_quantity(production.product_qty - qty_produced, production.bom_id.product_uom_id) / production.bom_id.product_qty
@@ -156,6 +173,7 @@ class MrpBomInh(models.Model):
     package_or_wire = fields.Selection([
         ('weighted_wire', 'Uses Weighted Wire'),
         ('polished', 'Polished/Packed'),
+        ('open_counter', 'Open/Counter'),
         ('none', 'None')], string='BOM Criteria',
         default='none')
     wire_used = fields.Many2one(
@@ -163,6 +181,13 @@ class MrpBomInh(models.Model):
     	string='Wire Used',
     	domain=lambda self : self.get_domain_product()
     	)
+
+    @api.multi
+    @api.onchange('package_or_wire')
+    def onchange_package_or_wire(self):
+        print "onchange_package_or_wire========="
+        if self.package_or_wire != 'weighted_wire':
+            self.wire_used = False
 
 class weightedWireLine(models.Model):
     _name = 'weighted.wire.line'
@@ -255,6 +280,29 @@ class packagingLine(models.Model):
         if self.state == 'done':
             raise UserError(_('Cannot delete a record'))
         return super(packagingLine, self).unlink()
+
+class OperationDetailLine(models.Model):
+    _name = 'operation.detail.line'
+    _description = 'Operation Detail'
+
+    mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
+    operation_date = fields.Date('Date', default=fields.Date.context_today,
+        readonly=True, states={'draft': [('readonly', False)]})
+    performed_by = fields.Char('Performed by',
+        readonly=True, states={'draft': [('readonly', False)]})
+    qty = fields.Float('Quantity', default=0.00,
+        readonly=True, states={'draft': [('readonly', False)]})
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('done', 'Done')],
+        string='Status',
+        default='draft')
+
+    @api.multi
+    def unlink(self):
+        if self.state == 'done':
+            raise UserError(_('Cannot delete a record'))
+        return super(OperationDetailLine, self).unlink()
 
 
 class MrpProductProduceInh(models.TransientModel):

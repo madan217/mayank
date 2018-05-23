@@ -9,7 +9,7 @@
             <field name="arch" type="xml">
             	<field name="type" position="after">
             		<field name="package_or_wire" widget="radio"/>
-            		<field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished'])],'required':[('package_or_wire','in',['weighted_wire'])]}" options="{'no_open':True, 'no_create': True,'no_edit': True}"/>
+            		<field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished', 'open_counter'])],'required':[('package_or_wire','in',['weighted_wire'])]}" options="{'no_open':True, 'no_create': True,'no_edit': True}"/>
             	</field>
             </field>
         </record>
@@ -30,15 +30,30 @@
                                         ('type', '=', 'normal')]"
                         context="{'default_product_tmpl_id': product_tmpl_id}" required="1" attrs="{'readonly': [('has_moves', '=', True)]}"/>
                     <field name="package_or_wire" invisible="1"/>
-                    <field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished'])],'required':[('package_or_wire','in',['weighted_wire'])]}"/>
+                    <field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished', 'open_counter', False])],'required':[('package_or_wire','in',['weighted_wire'])]}"/>
                 </field>
+                <button name="%(mrp.action_change_production_qty)d" position="replace">
+                </button>
+                <field name="product_uom_id" position="after">
+                    <button type="action"
+                        name="%(mrp.action_change_production_qty)d"
+                        string="Update" class="oe_link" attrs="{'invisible':['|',('package_or_wire','not in',[False, 'none']),('state', 'not in', ['confirmed','planned','progress'])]}"/>
+                </field>
+
+                <xpath expr="//header/button[4]" position="replace">
+                 </xpath>
+                 <xpath expr="//header/button[4]" position="replace">
+                    <button name="open_produce_product" attrs="{'invisible': ['|', '|', '|', ('check_to_done', '=', True), ('availability', 'not in', ['assigned']), ('state', 'not in', ('confirmed','progress')), ('routing_id', '!=', False)]}" string="Produce" type="object" class="oe_highlight"/>
+                 </xpath>
+
+
                 <notebook position="inside">
-                    <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished']),('package_or_wire','=', False)]}">
+                    <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="weighted_wire_lines" context="{'default_wire_used': wire_used}" options='{"reload_on_button": True}' attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
                             <tree editable="bottom" decoration-muted="state in ('done')">
                                 <field name="wire_used" required="1"/>
                                 <field name="wire_date" required="1"/>
-                                <field name="issued_to"/>
+                                <field name="issued_to" required="1"/>
                                 <field name="wire_issued" required="1"/>
                                 <field name="qty_produced"/>
                                 <field name="mo_id" invisible="1"/>
@@ -52,12 +67,12 @@
                         </group>
                     </page>
 
-                    <page string="Packaging Details" attrs="{'invisible': ['|',('package_or_wire','in',['none', 'weighted_wire']),('package_or_wire','=', False)]}">
+                    <page string="Packaging Details" attrs="{'invisible': ['|',('package_or_wire','in',['none', 'weighted_wire', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="packaging_lines" attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
                             <tree editable="bottom" decoration-muted="state in ('done','cancel')">
                                 <field name="polished_by" required="1"/>
                                 <field name="packed_by" required="1"/>
-                                <field name="package_date"/>
+                                <field name="package_date" required="1"/>
                                 <field name="qty"/>
                                 <field name="mo_id" invisible="1"/>
                                 <field name="state" invisible="1"/>
@@ -67,6 +82,23 @@
                             <field name="packaging_qty" invisible="1"/>
                             <button name="change_prod_qty_custom" required="1" string="Approve"
                             colspan="1" type="object" class="btn-primary" context="{'package_approve':True}"/>
+                        </group>
+                    </page>
+
+                    <page string="Operation Details" attrs="{'invisible': ['|',('package_or_wire','not in',['open_counter']),('package_or_wire','=', False)]}">
+                        <field name="operation_lines" attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
+                            <tree editable="bottom" decoration-muted="state in ('done','cancel')">
+                                <field name="operation_date" required="1"/>
+                                <field name="performed_by" required="1"/>
+                                <field name="qty" required="1"/>
+                                <field name="mo_id" invisible="1"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
+                        <group>
+                            <field name="operation_qty" invisible="0"/>
+                            <button name="change_prod_qty_custom" required="1" string="Approve"
+                            colspan="1" type="object" class="btn-primary" context="{'operation_approve':True}"/>
                         </group>
                     </page>
                 </notebook>
