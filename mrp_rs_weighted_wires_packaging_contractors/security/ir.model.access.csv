@@ -3,3 +3,4 @@ access_weighted_wire_line,weighted.wire.line.user,model_weighted_wire_line,mrp.g
 access_mrp_contractor,mrp.contractor.user,model_mrp_contractor,mrp.group_mrp_user,1,1,1,1
 access_packaging_line,packaging.line.user,model_packaging_line,mrp.group_mrp_user,1,1,1,1
 access_operation_detail_line,operation.detail.line.user,model_operation_detail_line,mrp.group_mrp_user,1,1,1,1
+access_contractor_rate_user,access_contractor_rate_user,model_contractor_rate,mrp.group_mrp_user,1,1,1,1

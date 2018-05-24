@@ -113,23 +113,50 @@
                     <field name="name"/>
                     <field name="start_date"/>
                     <field name="end_date"/>
-                    <field name="active_contractor"/>
+                    <field name="active"/>
                 </tree>
             </field>
         </record>
 
         <record id="mrp_contractor_action" model="ir.actions.act_window">
-            <field name="name">Contractors</field>
+            <field name="name">Contractor Labour</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">mrp.contractor</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree</field>
         </record>
 
+        <record id="mrp_contractor_rate_tree_view" model="ir.ui.view">
+            <field name="name">mrp.contractor.rate.tree</field>
+            <field name="model">contractor.rate</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="product_id" domain="[('bom_ids', '!=', False)]"/>
+                    <field name="polish_rate"/>
+                    <field name="packaging_rate"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="mrp_contractor_rate_action" model="ir.actions.act_window">
+            <field name="name">Contractor Rate</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">contractor.rate</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree</field>
+        </record>
 
         <menuitem id="menu_mrp_contractor"
             action="mrp_contractor_action"
             parent="mrp.menu_mrp_bom"
             sequence="10"/>
+
+        <menuitem id="menu_mrp_contractor_rate"
+            action="mrp_contractor_rate_action"
+            parent="mrp.menu_mrp_bom"
+            sequence="11"/>
     </data>
 </odoo>

@@ -100,18 +100,27 @@ class mrpProductionInh(models.Model):
                 if wizard.wire_qty < produced:
                     raise UserError(_("You have already processed %d. Please input a quantity higher than %d ")%(produced, produced))
                 production.write({'product_qty': wizard.wire_qty})
+                if production.weighted_wire_lines:
+                    for wrl in production.weighted_wire_lines:
+                        wrl.state = 'done'
             elif wizard._context.get('package_approve', False):
                 if wizard.packaging_qty < wizard.product_qty:
                     raise UserError(_("Approve quantity must be higher than quantity to produce"))
                 if wizard.packaging_qty < produced:
                     raise UserError(_("You have already processed %d. Please input a quantity higher than %d ")%(produced, produced))
                 production.write({'product_qty': wizard.packaging_qty})
+                if production.packaging_lines:
+                    for pl in production.packaging_lines:
+                        pl.state = 'done'
             elif wizard._context.get('operation_approve', False):
                 if wizard.operation_qty < wizard.product_qty:
                     raise UserError(_("Approve quantity must be higher than quantity to produce"))
                 if wizard.operation_qty < produced:
                     raise UserError(_("You have already processed %d. Please input a quantity higher than %d ")%(produced, produced))
                 production.write({'product_qty': wizard.operation_qty})
+                if production.operation_lines:
+                    for ol in production.operation_lines:
+                        ol.state = 'done'
             done_moves = production.move_finished_ids.filtered(lambda x: x.state == 'done' and x.product_id == production.product_id)
             qty_produced = production.product_id.uom_id._compute_quantity(sum(done_moves.mapped('product_qty')), production.product_uom_id)
             factor = production.product_uom_id._compute_quantity(production.product_qty - qty_produced, production.bom_id.product_uom_id) / production.bom_id.product_qty
@@ -208,7 +217,7 @@ class weightedWireLine(models.Model):
         readonly=True, states={'draft': [('readonly', False)]}
     	)
 
-    issued_to = fields.Char('Issued To', readonly=True, states={'draft': [('readonly', False)]})
+    issued_to = fields.Many2one('mrp.contractor', 'Issued To', readonly=True, states={'draft': [('readonly', False)]})
     wire_issued = fields.Float(
         'Wire Issued(Kg)', digits=dp.get_precision('Product Unit of Measure'), default=0.000,
         readonly=True, states={'draft': [('readonly', False)]})
@@ -251,9 +260,22 @@ class mrpContractors(models.Model):
     _description = 'Contractors'
 
     name = fields.Char('Name', required=True)
-    start_date = fields.Date('Start Date', default=date.today())
+    start_date = fields.Date('Start Date', default=fields.Date.context_today)
     end_date = fields.Date('End Date')
-    active_contractor = fields.Boolean('Active', default=False)
+    active = fields.Boolean('Active', default=True)
+
+class ContractorsRates(models.Model):
+    _name = 'contractor.rate'
+    _rec_name = 'product_id'
+    _description = 'Contractor Rates'
+
+    product_id = fields.Many2one(
+        'product.product', 'Product Variant', required=True)
+    polish_rate = fields.Float('Polish Rate', digits=(16,2), default=0.00)
+    packaging_rate = fields.Float('Packaging Rate', digits=(16,2), default=0.00)
+    start_date = fields.Date('Start Date', default=fields.Date.context_today)
+    end_date = fields.Date('End Date')
+    active = fields.Boolean('Active', default=True)
 
 
 class packagingLine(models.Model):
@@ -288,7 +310,7 @@ class OperationDetailLine(models.Model):
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
     operation_date = fields.Date('Date', default=fields.Date.context_today,
         readonly=True, states={'draft': [('readonly', False)]})
-    performed_by = fields.Char('Performed by',
+    performed_by = fields.Many2one('mrp.contractor', 'Performed by',
         readonly=True, states={'draft': [('readonly', False)]})
     qty = fields.Float('Quantity', default=0.00,
         readonly=True, states={'draft': [('readonly', False)]})
@@ -305,20 +327,20 @@ class OperationDetailLine(models.Model):
         return super(OperationDetailLine, self).unlink()
 
 
-class MrpProductProduceInh(models.TransientModel):
-    _inherit = "mrp.product.produce"
+# class MrpProductProduceInh(models.TransientModel):
+#     _inherit = "mrp.product.produce"
     
 
-    @api.multi
-    def do_produce(self):
-        res = super(MrpProductProduceInh, self).do_produce()
-        if self.production_id.weighted_wire_lines:
-            for wrl in self.production_id.weighted_wire_lines:
-                wrl.state = 'done'
-        if self.production_id.packaging_lines:
-            for pl in self.production_id.packaging_lines:
-                pl.state = 'done'
-        if self.production_id.operation_lines:
-            for ol in self.production_id.operation_lines:
-                ol.state = 'done'
-        return res
+#     @api.multi
+#     def do_produce(self):
+#         res = super(MrpProductProduceInh, self).do_produce()
+#         if self.production_id.weighted_wire_lines:
+#             for wrl in self.production_id.weighted_wire_lines:
+#                 wrl.state = 'done'
+#         if self.production_id.packaging_lines:
+#             for pl in self.production_id.packaging_lines:
+#                 pl.state = 'done'
+#         if self.production_id.operation_lines:
+#             for ol in self.production_id.operation_lines:
+#                 ol.state = 'done'
+#         return res
