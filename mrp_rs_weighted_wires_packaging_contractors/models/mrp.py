@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from datetime import date
+from datetime import date, datetime, timedelta
 import odoo.addons.decimal_precision as dp
-from odoo.exceptions import UserError
-from odoo.tools import float_is_zero
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_is_zero, float_compare, float_round
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
+
 import math
 
 
@@ -36,10 +38,10 @@ class mrpProductionInh(models.Model):
             mr.operation_qty = total
 
     wire_used = fields.Many2one(
-    	'product.product', 
-    	string='Wire Used',
+        'product.product', 
+        string='Wire Used',
         readonly=True, states={'confirmed': [('readonly', False)]},
-    	)
+        )
     package_or_wire = fields.Selection([
         ('weighted_wire', 'Uses Weighted Wire'),
         ('polished', 'Polished/Packed'),
@@ -51,9 +53,125 @@ class mrpProductionInh(models.Model):
     packaging_lines = fields.One2many(
         'packaging.line', 'mo_id', string='Packaging Lines')
     operation_lines = fields.One2many('operation.detail.line', 'mo_id', string='Operation Lines')
-    wire_qty = fields.Float('Qty Produced', compute="compute_wire_qty", store=True, default=0.00)
-    packaging_qty = fields.Float('Qty Produced', compute="compute_packaging_qty", store=True, default=0.00)
-    operation_qty = fields.Float('Qty Produced', compute="compute_operation_qty", store=True, default=0.00)
+    wire_qty = fields.Float('Qty Produced', compute="compute_wire_qty", store=True, default=0.00,
+        digits=dp.get_precision('Product Unit of Measure'))
+    packaging_qty = fields.Float('Qty Produced', compute="compute_packaging_qty", store=True, default=0.00,
+        digits=dp.get_precision('Product Unit of Measure'))
+    operation_qty = fields.Float('Qty Produced', compute="compute_operation_qty", store=True, default=0.00,
+        digits=dp.get_precision('Product Unit of Measure'))
+
+    def get_default_data(self):
+        res = {}
+        main_product_moves = self.move_finished_ids.filtered(lambda x: x.product_id.id == self.product_id.id)
+        serial_finished = (self.product_id.tracking == 'serial')
+        serial = bool(serial_finished)
+        if serial_finished:
+            quantity = 1.0
+        else:
+            quantity = self.product_qty - sum(main_product_moves.mapped('quantity_done'))
+            quantity = quantity if (quantity > 0) else 0
+        lines = []
+        existing_lines = []
+        for move in self.move_raw_ids.filtered(lambda x: (x.product_id.tracking != 'none') and x.state not in ('done', 'cancel')):
+            if not move.move_lot_ids.filtered(lambda x: not x.lot_produced_id):
+                qty = quantity / move.bom_line_id.bom_id.product_qty * move.bom_line_id.product_qty
+                if move.product_id.tracking == 'serial':
+                    while float_compare(qty, 0.0, precision_rounding=move.product_uom.rounding) > 0:
+                        lines.append({
+                            'move_id': move.id,
+                            'quantity': min(1,qty),
+                            'quantity_done': 0.0,
+                            'plus_visible': True,
+                            'product_id': move.product_id.id,
+                            'production_id': production.id,
+                        })
+                        qty -= 1
+                else:
+                    lines.append({
+                        'move_id': move.id,
+                        'quantity': qty,
+                        'quantity_done': 0.0,
+                        'plus_visible': True,
+                        'product_id': move.product_id.id,
+                        'production_id': self.id,
+                    })
+            else:
+                existing_lines += move.move_lot_ids.filtered(lambda x: not x.lot_produced_id).ids
+
+        res['serial'] = serial
+        res['production_id'] = self.id
+        res['product_qty'] = quantity
+        res['product_id'] = self.product_id.id
+        res['product_uom_id'] = self.product_uom_id.id
+        res['consume_line_ids'] = map(lambda x: (0,0,x), lines) + map(lambda x:(4, x), existing_lines)
+        return res
+    
+    @api.multi
+    def open_produce_product(self):
+        self.ensure_one()
+        resDic = self.get_default_data()
+        moves = self.move_raw_ids
+        quantity = resDic['product_qty']
+        if float_compare(quantity, 0, precision_rounding=self.product_uom_id.rounding) <= 0:
+            raise UserError(_('You should at least produce some quantity'))
+        for move in moves.filtered(lambda x: x.product_id.tracking == 'none' and x.state not in ('done', 'cancel')):
+            if move.unit_factor:
+                rounding = move.product_uom.rounding
+                move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+        moves = self.move_finished_ids.filtered(lambda x: x.product_id.tracking == 'none' and x.state not in ('done', 'cancel'))
+        for move in moves:
+            rounding = move.product_uom.rounding
+            if move.product_id.id == self.product_id.id:
+                move.quantity_done_store += float_round(quantity, precision_rounding=rounding)
+            elif move.unit_factor:
+                # byproducts handling
+                move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+        self.check_finished_move_lots(quantity)
+        # print "elf.production_id.state===========",self.production_id.state
+        if self.state == 'confirmed':
+            self.write({
+                'state': 'progress',
+                'date_start': datetime.now(),
+            })
+        self.post_inventory()
+
+    @api.multi
+    def check_finished_move_lots(self, quantity):
+        lots = self.env['stock.move.lots']
+        produce_move = self.move_finished_ids.filtered(lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel'))
+        if produce_move and produce_move.product_id.tracking != 'none':
+            lot_ids = self.env['stock.production.lot'].search([
+                ('product_id', '=', self.product_id.id)])
+            print "out lot id============",lot_ids
+            if not lot_ids:
+                lot_ids = lot_ids.create({'product_id': self.product_id.id})
+                print "in lot id============",lot_ids
+            existing_move_lot = produce_move.move_lot_ids.filtered(lambda x: x.lot_id == lot_ids[0])
+            if existing_move_lot:
+                existing_move_lot.quantity += quantity
+                existing_move_lot.quantity_done += quantity
+            else:
+                vals = {
+                  'move_id': produce_move.id,
+                  'product_id': produce_move.product_id.id,
+                  'production_id': self.id,
+                  'quantity': quantity,
+                  'quantity_done': quantity,
+                  'lot_id': lot_ids[0].id,
+                }
+                lots.create(vals)
+            for move in self.move_raw_ids:
+                for movelots in move.move_lot_ids.filtered(lambda x: not x.lot_produced_id):
+                    if movelots.quantity_done and lot_ids[0]:
+                        #Possibly the entire move is selected
+                        remaining_qty = movelots.quantity - movelots.quantity_done
+                        if remaining_qty > 0:
+                            default = {'quantity': movelots.quantity_done, 'lot_produced_id': lot_ids[0].id}
+                            new_move_lot = movelots.copy(default=default)
+                            movelots.write({'quantity': remaining_qty, 'quantity_done': 0})
+                        else:
+                            movelots.write({'lot_produced_id': lot_ids[0].id})
+        return True
 
     @api.onchange('bom_id')
     def onchange_bom_id(self):
@@ -172,12 +290,12 @@ class MrpBomInh(models.Model):
     _inherit = 'mrp.bom'
 
     def get_domain_product(self):
-    	ir_model_data = self.env['ir.model.data']
-    	pTempId = ir_model_data.get_object_reference(
-    		'mrp_rs_weighted_wires_packaging_contractors',
-    		'product_weighted_wire')[1]
-    	productIds = self.env['product.product'].search([('product_tmpl_id', '=', pTempId)]).mapped('id')
-    	return [('id', 'in', productIds)]
+        ir_model_data = self.env['ir.model.data']
+        pTempId = ir_model_data.get_object_reference(
+            'mrp_rs_weighted_wires_packaging_contractors',
+            'product_weighted_wire')[1]
+        productIds = self.env['product.product'].search([('product_tmpl_id', '=', pTempId)]).mapped('id')
+        return [('id', 'in', productIds)]
 
     package_or_wire = fields.Selection([
         ('weighted_wire', 'Uses Weighted Wire'),
@@ -186,10 +304,13 @@ class MrpBomInh(models.Model):
         ('none', 'None')], string='BOM Criteria',
         default='none')
     wire_used = fields.Many2one(
-    	'product.product', 
-    	string='Wire Used',
-    	domain=lambda self : self.get_domain_product()
-    	)
+        'product.product', 
+        string='Wire Used',
+        domain=lambda self : self.get_domain_product()
+        )
+    product_qty = fields.Float(
+        'Quantity', default=1.0,
+        digits=dp.get_precision('Product Unit of Measure'), required=True)
 
     @api.multi
     @api.onchange('package_or_wire')
@@ -212,16 +333,17 @@ class weightedWireLine(models.Model):
     wire_date = fields.Date('Date', default=fields.Date.context_today,
                 readonly=True, states={'draft': [('readonly', False)]})
     wire_used = fields.Many2one(
-    	'product.product', 
-    	string='Wire Used',
+        'product.product', 
+        string='Wire Used',
         readonly=True, states={'draft': [('readonly', False)]}
-    	)
+        )
 
     issued_to = fields.Many2one('mrp.contractor', 'Issued To', readonly=True, states={'draft': [('readonly', False)]})
     wire_issued = fields.Float(
         'Wire Issued(Kg)', digits=dp.get_precision('Product Unit of Measure'), default=0.000,
         readonly=True, states={'draft': [('readonly', False)]})
-    qty_produced = fields.Float('Qty Produced', compute="compute_qty_produced", store=True, default=0.00)
+    qty_produced = fields.Float('Qty Produced', compute="compute_qty_produced", store=True, default=0.00,
+        digits=dp.get_precision('Product Unit of Measure'))
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -229,6 +351,29 @@ class weightedWireLine(models.Model):
         string='Status',
         default='draft',
         readonly=True, states={'draft': [('readonly', False)]})
+
+    @api.one
+    @api.constrains('wire_date')
+    def _check_wire_date(self):
+        selectDate = datetime.strptime(self.wire_date, DF) #fields.Date.today()
+        today = datetime.strptime(fields.Date.context_today(self), DF)
+        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
+        if not pastdays and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        pastDate = today + timedelta(days=int(-pastdays))
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if not future_days and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        futureDate = today + timedelta(days=int(future_days))
+        lang_code = self.env.context.get('lang') or 'en_US'
+        lang = self.env['res.lang']
+        lang_id = lang._lang_get(lang_code)
+        date_format = lang_id.date_format
+        if selectDate < pastDate:
+            raise ValidationError(_('Date must be greater than %s')%datetime.strftime((pastDate+timedelta(days=-1)),date_format))
+        elif selectDate > futureDate:
+            datetime.strptime
+            raise ValidationError(_('Date must be less than %s')%datetime.strftime((futureDate+timedelta(days=1)),date_format))
 
     @api.multi
     def unlink(self):
@@ -269,10 +414,19 @@ class ContractorsRates(models.Model):
     _rec_name = 'product_id'
     _description = 'Contractor Rates'
 
+    def get_domain_product(self):
+        ir_model_data = self.env['ir.model.data']
+        pTempId = ir_model_data.get_object_reference(
+            'mrp_rs_weighted_wires_packaging_contractors',
+            'product_packed_carton')[1]
+        productIds = self.env['product.product'].search([('product_tmpl_id', '=', pTempId)]).mapped('id')
+        return [('id', 'in', productIds)]
+
     product_id = fields.Many2one(
-        'product.product', 'Product Variant', required=True)
-    polish_rate = fields.Float('Polish Rate', digits=(16,2), default=0.00)
-    packaging_rate = fields.Float('Packaging Rate', digits=(16,2), default=0.00)
+        'product.product', 'Product Variant', required=True,
+        domain=lambda self : self.get_domain_product())
+    polish_rate = fields.Float('Polish Rate (per piece)', digits=(16,2), default=0.00)
+    packaging_rate = fields.Float('Packaging Rate (per piece)', digits=(16,2), default=0.00)
     start_date = fields.Date('Start Date', default=fields.Date.context_today)
     end_date = fields.Date('End Date')
     active = fields.Boolean('Active', default=True)
@@ -282,6 +436,18 @@ class packagingLine(models.Model):
     _name = 'packaging.line'
     _description = 'Packaging Lines'
 
+    # @api.multi
+    # @api.onchange('package_date')
+    # def onchange(self):
+    #     toDay = fields.Date.today()
+    #     print "toDay===============",toDay,type(toDay)
+        # ir_model_data = self.env['ir.model.data']
+        # pTempId = ir_model_data.get_object_reference(
+        #     'mrp_rs_weighted_wires_packaging_contractors',
+        #     'product_weighted_wire')[1]
+        # productIds = self.env['product.product'].search([('product_tmpl_id', '=', pTempId)]).mapped('id')
+        # return [('id', 'in', productIds)]
+
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
     package_date = fields.Date('Date', default=fields.Date.context_today,
         readonly=True, states={'draft': [('readonly', False)]})
@@ -290,12 +456,55 @@ class packagingLine(models.Model):
     packed_by = fields.Many2one('mrp.contractor', 'Packed By',
         readonly=True, states={'draft': [('readonly', False)]})
     qty = fields.Float('Quantity', default=0.00,
-        readonly=True, states={'draft': [('readonly', False)]})
+        readonly=True, states={'draft': [('readonly', False)]},
+        digits=dp.get_precision('Product Unit of Measure'))
     state = fields.Selection([
         ('draft', 'Draft'),
         ('done', 'Done')],
         string='Status',
         default='draft')
+
+
+    @api.one
+    @api.constrains('package_date')
+    def _check_package_date(self):
+        selectDate = datetime.strptime(self.package_date, DF) #fields.Date.today()
+        today = datetime.strptime(fields.Date.context_today(self), DF)
+        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
+        if not pastdays and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        pastDate = today + timedelta(days=int(-pastdays))
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if not future_days and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        futureDate = today + timedelta(days=int(future_days))
+        lang_code = self.env.context.get('lang') or 'en_US'
+        lang = self.env['res.lang']
+        lang_id = lang._lang_get(lang_code)
+        date_format = lang_id.date_format
+        if selectDate < pastDate:
+            raise ValidationError(_('Date must be greater than %s')%datetime.strftime((pastDate+timedelta(days=-1)),date_format))
+        elif selectDate > futureDate:
+            datetime.strptime
+            raise ValidationError(_('Date must be less than %s')%datetime.strftime((futureDate+timedelta(days=1)),date_format))
+    # @api.multi
+    # @api.onchange('package_date')
+    # def onchange_package_date(self):
+    #     selectDate = datetime.strptime(self.package_date, DF) #fields.Date.today()
+    #     today = datetime.strptime(fields.Date.context_today(self), DF)
+    #     pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
+    #     pastDate = today + timedelta(days=int(-pastdays))
+    #     future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+    #     futureDate = today + timedelta(days=int(future_days))
+    #     if selectDate < pastDate:
+    #         self.package_date = False
+    #         raise ValidationError(_('Date must be greater than %s')%pastDate)
+        # elif selectDate > future_days:
+
+        # print "pastdays==============",pastDate,future_days
+        # today = datetime.today()
+        # last_month = today + timedelta(days=-30)
+        # print "today==========="
 
     @api.multi
     def unlink(self):
@@ -307,18 +516,55 @@ class OperationDetailLine(models.Model):
     _name = 'operation.detail.line'
     _description = 'Operation Detail'
 
+    @api.multi
+    @api.depends('weight_kg','weight_piece')
+    def compute_qty(self):
+        for od in self:
+            if od.weight_piece > 0:
+                od.qty = od.weight_kg/(od.weight_piece/1000)
+
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
     operation_date = fields.Date('Date', default=fields.Date.context_today,
         readonly=True, states={'draft': [('readonly', False)]})
     performed_by = fields.Many2one('mrp.contractor', 'Performed by',
         readonly=True, states={'draft': [('readonly', False)]})
+    weight_kg = fields.Float('Weight (In Kg)', default=0.0,
+        readonly=True, states={'draft': [('readonly', False)]},
+        digits=dp.get_precision('Product Unit of Measure'))
+    weight_piece = fields.Float('Weight (Piece In Gram)', default=0.0,
+        readonly=True, states={'draft': [('readonly', False)]},
+        digits=dp.get_precision('Product Unit of Measure'))
     qty = fields.Float('Quantity', default=0.00,
-        readonly=True, states={'draft': [('readonly', False)]})
+        compute='compute_qty', store=True,
+        digits=dp.get_precision('Product Unit of Measure'))
     state = fields.Selection([
         ('draft', 'Draft'),
         ('done', 'Done')],
         string='Status',
         default='draft')
+
+    @api.one
+    @api.constrains('operation_date')
+    def _check_operation_date(self):
+        selectDate = datetime.strptime(self.operation_date, DF) #fields.Date.today()
+        today = datetime.strptime(fields.Date.context_today(self), DF)
+        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
+        if not pastdays and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        pastDate = today + timedelta(days=int(-pastdays))
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if not future_days and today != selectDate:
+            raise ValidationError(_('Date must be today date'))
+        futureDate = today + timedelta(days=int(future_days))
+        lang_code = self.env.context.get('lang') or 'en_US'
+        lang = self.env['res.lang']
+        lang_id = lang._lang_get(lang_code)
+        date_format = lang_id.date_format
+        if selectDate < pastDate:
+            raise ValidationError(_('Date must be greater than %s')%datetime.strftime((pastDate+timedelta(days=-1)),date_format))
+        elif selectDate > futureDate:
+            datetime.strptime
+            raise ValidationError(_('Date must be less than %s')%datetime.strftime((futureDate+timedelta(days=1)),date_format))
 
     @api.multi
     def unlink(self):

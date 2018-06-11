@@ -19,7 +19,8 @@
     'data': [
         'security/ir.model.access.csv',
         'data/data.xml',
-        'views/mrp_view.xml',
+        'views/mrp_config_settings_views.xml',
+        'views/mrp_view.xml'
         ],
 	'images' : [],
  	'demo': [],

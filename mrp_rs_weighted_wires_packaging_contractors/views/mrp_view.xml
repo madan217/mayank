@@ -47,7 +47,7 @@
                  </xpath>
 
 
-                <notebook position="inside">
+                <xpath expr="//page[1]" position="before">
                     <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="weighted_wire_lines" context="{'default_wire_used': wire_used}" options='{"reload_on_button": True}' attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
                             <tree editable="bottom" decoration-muted="state in ('done')">
@@ -90,6 +90,8 @@
                             <tree editable="bottom" decoration-muted="state in ('done','cancel')">
                                 <field name="operation_date" required="1"/>
                                 <field name="performed_by" required="1"/>
+                                <field name="weight_kg" required="1"/>
+                                <field name="weight_piece" required="1"/>
                                 <field name="qty" required="1"/>
                                 <field name="mo_id" invisible="1"/>
                                 <field name="state" invisible="1"/>
@@ -101,7 +103,7 @@
                             colspan="1" type="object" class="btn-primary" context="{'operation_approve':True}"/>
                         </group>
                     </page>
-                </notebook>
+                </xpath>
            	</field>
         </record>
 
@@ -131,7 +133,7 @@
             <field name="model">contractor.rate</field>
             <field name="arch" type="xml">
                 <tree editable="bottom">
-                    <field name="product_id" domain="[('bom_ids', '!=', False)]"/>
+                    <field name="product_id"/>
                     <field name="polish_rate"/>
                     <field name="packaging_rate"/>
                     <field name="start_date"/>
