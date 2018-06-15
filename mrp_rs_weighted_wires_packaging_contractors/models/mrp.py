@@ -142,10 +142,8 @@ class mrpProductionInh(models.Model):
         if produce_move and produce_move.product_id.tracking != 'none':
             lot_ids = self.env['stock.production.lot'].search([
                 ('product_id', '=', self.product_id.id)])
-            print "out lot id============",lot_ids
             if not lot_ids:
                 lot_ids = lot_ids.create({'product_id': self.product_id.id})
-                print "in lot id============",lot_ids
             existing_move_lot = produce_move.move_lot_ids.filtered(lambda x: x.lot_id == lot_ids[0])
             if existing_move_lot:
                 existing_move_lot.quantity += quantity

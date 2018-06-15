@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_contractor_cost_wizard" model="ir.ui.view">
+            <field name="name">contractor.cost.wizard</field>
+            <field name="model">report.mrp_rs_weighted_wires_packaging_contractors.rcc</field>
+            <field name="arch" type="xml">
+                <form string="Contractor Cost">
+                    <group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="operation"/>
+                            <field name="contractor_id" domain="[('start_date', '&gt;=', start_date),('end_date', '&lt;=', end_date)]"/>
+                        </group>
+                        <group>
+                            <field name="end_date"/>
+                            <field name="product_id"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="print_contractor_cost" type="object" string="Print" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="act_contractor_cost_wizard" model="ir.actions.act_window">
+            <field name="name">Contractor Cost</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">report.mrp_rs_weighted_wires_packaging_contractors.rcc</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="context">{}</field>
+            <field name="target">new</field>
+        </record>
+
+         <menuitem id="menu_contractor_cost_wizard"
+          name="Contractor Cost"
+          parent="mrp.menu_mrp_reporting"
+          action="act_contractor_cost_wizard"
+          sequence="10"/>
+
+        <template id="rcc">
+                <t t-call="report.html_container">
+                    <t t-call="report.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <div class="row">
+
+                            <div class="row mt32 mb32" id="informations">
+                                <div class="col-xs-3">
+                                    <strong>Contractor: </strong>
+                                    <p t-esc="data['contractor_id'][1]"/>
+                                </div>
+                                <div class="col-xs-3">
+                                    <strong>Period: </strong>
+                                    <p><span t-esc="data['start_date']"/> -  <span t-esc="data['end_date']"/></p>
+                                </div>
+                                <div class="col-xs-3">
+                                    <strong>Operation:</strong>
+                                    <p t-esc="data['operation']"/>
+                                </div>
+                                <div t-if="data['product_id']" class="col-xs-3">
+                                    <strong>Product: </strong>
+                                    <p t-esc="data['product_id'][1]"/>
+                                </div>
+                            </div>
+                        </div>
+                            <table class="table table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th class="text-center">MO #</th>
+                                        <th class="text-center">Product</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-center">Rate</th>
+                                        <th class="text-center">Total</th>
+                                    </tr>
+                               </thead>
+                               <tbody class="sale_tbody">
+                                        <t t-foreach="data['pids']" t-as="l">
+                                            <tr>
+                                                <td><span t-esc="l['package_date']"/></td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['mo']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['product_id']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['qty']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['rate']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['total']"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr>
+                                            <td></td>
+                                            <td class="text-center">
+                                                
+                                            </td>
+                                            <td class="text-center">
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-esc="data['grandQty']"/>
+                                            </td>
+                                            <td class="text-center">
+                                               
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-esc="data['grandTotal']"/>
+                                            </td>
+                                        </tr>
+
+                                </tbody>
+                            </table>
+
+                        <!-- <div class="row" name="total">
+                            <div class="col-xs-4 pull-right">
+                                <table class="table table-condensed">
+                                    <tr class="border-black">
+                                        <td><strong>Total Without Taxes</strong></td>
+                                        <td class="text-right">
+                                            <span t-field="doc.amount_untaxed"
+                                                t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <t t-foreach="doc._get_tax_amount_by_group()" t-as="amount_by_group">
+                                        <tr>
+                                            <td><span t-esc="amount_by_group[0] or 'Taxes'"/></td>
+                                            <td class="text-right">
+                                                <span t-esc="amount_by_group[1]"
+                                                    t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr class="border-black">
+                                        <td><strong>Total</strong></td>
+                                        <td class="text-right">
+                                            <span t-field="doc.amount_total"
+                                                t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <p t-field="doc.note" />
+                        <p t-if="doc.payment_term_id.note">
+                            <span t-field="doc.payment_term_id.note"/>
+                        </p>
+                        <p id="fiscal_position_remark" t-if="doc.fiscal_position_id and doc.fiscal_position_id.note">
+                            <strong>Fiscal Position Remark:</strong>
+                            <span t-field="doc.fiscal_position_id.note"/>
+                        </p>
+                        <div class="oe_structure"/> -->
+                    </div>
+                </t>
+                </t>
+            </template>
+
+
+          <report 
+            id="action_report_contractor_cost"
+            string="Contractor Cost"
+            model="contractor.cost.wizard" 
+            report_type="qweb-pdf"
+            file="mrp_rs_weighted_wires_packaging_contractors.rcc" 
+            name="mrp_rs_weighted_wires_packaging_contractors.rcc" 
+        />
+</odoo>
+
