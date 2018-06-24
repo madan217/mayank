@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="port_code_tree" model="ir.ui.view">
+        <field name="name">port.code.tree</field>
+        <field name="model">port.code</field>
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+              <tree editable="1">
+                      <field name='name'/>
+                      <field name='code'/>
+              </tree>
+        </field>
+    </record>
+
+    <record id="action_port_code" model="ir.actions.act_window">
+        <field name="name">Port Master</field>
+        <field name="res_model">port.code</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="port_code_tree"/>
+    </record>
+
+
+    <menuitem id="menu_port_code"
+        action="action_port_code"
+        name="Port Master"
+        parent="account.menu_finance_configuration"
+        sequence="1"
+        groups="account.group_account_invoice"/>
+</odoo>

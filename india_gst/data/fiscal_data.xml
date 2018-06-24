@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- _________________ Export  ___________________ -->
+
+        <record id="fiscal_export" model="account.fiscal.position">
+            <field name="name">Export</field>
+            <field name="active">True</field>
+            <!-- <field name="tax_ids" ref="fiscal_export_tax"/> -->
+        </record>
+
+        <record id="fiscal_export_cgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst6_standard_sales"/>
+        </record>
+        <record id="fiscal_export_sgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst6_standard_sales"/>
+        </record>
+        <record id="fiscal_export_cgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst9_standard_sales"/>
+        </record>
+        <record id="fiscal_export_sgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst9_standard_sales"/>
+        </record>
+        <record id="fiscal_export_cgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst14_standard_sales"/>
+        </record>
+        <record id="fiscal_export_sgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst14_standard_sales"/>
+        </record>
+        <record id="fiscal_export_cgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst2_5_standard_sales"/>
+        </record>
+        <record id="fiscal_export_sgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst2_5_standard_sales"/>
+        </record>
+
+        <record id="fiscal_export_output_cgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst6_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_sgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst6_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_cgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst9_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_sgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst9_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_cgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst14_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_sgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst14_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_cgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="cgst2_5_out_standard_sales"/>
+        </record>
+        <record id="fiscal_export_output_sgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_export"/>
+            <field name="tax_src_id" ref="sgst2_5_out_standard_sales"/>
+        </record>
+
+        <!-- _________________ Intra State  ___________________ -->
+
+        <record id="fiscal_intra_state" model="account.fiscal.position">
+            <field name="name">Intra State</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- _________________ Inter State  ___________________ -->
+
+        <record id="fiscal_inter_state" model="account.fiscal.position">
+            <field name="name">Inter State</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="fiscal_inter_cgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst6_standard_sales"/>
+            <field name="tax_dest_id" ref="igst12_standard_sales" />
+        </record>
+        <record id="fiscal_inter_sgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst6_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_cgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst9_standard_sales"/>
+            <field name="tax_dest_id" ref="igst18_standard_sales" />
+        </record>
+        <record id="fiscal_inter_sgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst9_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_cgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst14_standard_sales"/>
+            <field name="tax_dest_id" ref="igst28_standard_sales" />
+        </record>
+        <record id="fiscal_inter_sgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst14_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_cgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst2_5_standard_sales"/>
+            <field name="tax_dest_id" ref="igst5_standard_sales" />
+        </record>
+        <record id="fiscal_inter_sgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst2_5_standard_sales"/>
+        </record>
+
+
+        <record id="fiscal_inter_output_cgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst6_out_standard_sales"/>
+            <field name="tax_dest_id" ref="igst12_out_standard_sales" />
+        </record>
+        <record id="fiscal_inter_output_sgst6" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst6_out_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_output_cgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst9_out_standard_sales"/>
+            <field name="tax_dest_id" ref="igst18_out_standard_sales" />
+        </record>
+        <record id="fiscal_inter_output_sgst9" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst9_out_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_output_cgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst14_out_standard_sales"/>
+            <field name="tax_dest_id" ref="igst28_out_standard_sales" />
+        </record>
+        <record id="fiscal_inter_output_sgst14" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst14_out_standard_sales"/>
+        </record>
+        <record id="fiscal_inter_output_cgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="cgst2_5_out_standard_sales"/>
+            <field name="tax_dest_id" ref="igst5_out_standard_sales" />
+        </record>
+        <record id="fiscal_inter_output_sgst2_5" model="account.fiscal.position.tax">
+            <field name="position_id" ref="fiscal_inter_state"/>
+            <field name="tax_src_id" ref="sgst2_5_out_standard_sales"/>
+        </record>
+    </data>
+</odoo>

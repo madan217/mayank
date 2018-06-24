@@ -1,0 +1,37 @@
+id,name,state_code
+base.state_in_an,Andaman and Nicobar,35
+base.state_in_ap,Andhra Pradesh,28
+base.state_in_ar,Arunachal Pradesh,12
+base.state_in_as,Assam,18
+base.state_in_br,Bihar,10
+base.state_in_cg,Chattisgarh,22
+base.state_in_ch,Chandigarh,4
+base.state_in_dd,Daman and Diu,25
+base.state_in_dl,Delhi,7
+base.state_in_dn,Dadra and Nagar Haveli,26
+base.state_in_ga,Goa,30
+base.state_in_gj,Gujarat,24
+base.state_in_hp,Himachal Pradesh,2
+base.state_in_hr,Haryana,6
+base.state_in_jh,Jharkhand,20
+base.state_in_jk,Jammu and Kashmir,1
+base.state_in_ka,Karnataka,29
+base.state_in_kl,Kerala,32
+base.state_in_ld,Lakshadweep,31
+base.state_in_mh,Maharashtra,27
+base.state_in_ml,Meghalaya,17
+base.state_in_mn,Manipur,14
+base.state_in_mp,Madhya Pradesh,23
+base.state_in_mz,Mizoram,15
+base.state_in_nl,Nagaland,13
+base.state_in_or,Orissa,21
+base.state_in_pb,Punjab,3
+base.state_in_py,Puducherry,34
+base.state_in_rj,Rajasthan,8
+base.state_in_sk,Sikkim,11
+base.state_in_tn,Tamil Nadu,33
+base.state_in_tr,Tripura,16
+base.state_in_ts,Telangana,36
+base.state_in_uk,Uttarakhand,5
+base.state_in_up,Uttar Pradesh,9
+base.state_in_wb,West Bengal,19

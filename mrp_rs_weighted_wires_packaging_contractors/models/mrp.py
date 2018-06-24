@@ -8,10 +8,32 @@ from odoo.tools import float_is_zero, float_compare, float_round
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 
 import math
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class mrpProductionInh(models.Model):
     _inherit = 'mrp.production'
+
+    @api.multi
+    @api.depends('parent_id','name')
+    def compute_mo_chain(self):
+        for mo in self:
+            chain = [mo.name]
+            ids  = [mo.id]
+            parent = mo.parent_id
+            while(parent):
+                print "chain===========",chain
+                chain.append(parent.name)
+                parent = parent.parent_id
+            mo.mo_chain = ' - '.join(chain[::-1]) 
+
+    @api.constrains('parent_id')
+    def _check_category_recursion(self):
+        if not self._check_recursion():
+            raise ValidationError(_('Error ! You cannot create recursive MO Chain.'))
+        return True    
 
     @api.depends('weighted_wire_lines', 'weighted_wire_lines.qty_produced')
     def compute_wire_qty(self):
@@ -47,7 +69,7 @@ class mrpProductionInh(models.Model):
         ('polished', 'Polished/Packed'),
         ('open_counter', 'Open/Counter'),
         ('none', 'None')], related="bom_id.package_or_wire", string='Wire Or Polished',
-        default='none')
+        )
     weighted_wire_lines = fields.One2many(
         'weighted.wire.line', 'mo_id', string='Weighted Wire Lines')
     packaging_lines = fields.One2many(
@@ -59,6 +81,8 @@ class mrpProductionInh(models.Model):
         digits=dp.get_precision('Product Unit of Measure'))
     operation_qty = fields.Float('Qty Produced', compute="compute_operation_qty", store=True, default=0.00,
         digits=dp.get_precision('Product Unit of Measure'))
+    parent_id = fields.Many2one('mrp.production', 'Parent MO')
+    mo_chain = fields.Char('MO Chain', compute="compute_mo_chain")
 
     def get_default_data(self):
         res = {}
@@ -356,13 +380,12 @@ class weightedWireLine(models.Model):
         selectDate = datetime.strptime(self.wire_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
         pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        if not pastdays and today != selectDate:
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
-        if not future_days and today != selectDate:
-            raise ValidationError(_('Date must be today date'))
         futureDate = today + timedelta(days=int(future_days))
+        _logger.info("futureDate===========%s" %(futureDate))
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
         lang_id = lang._lang_get(lang_code)
@@ -423,7 +446,9 @@ class ContractorsRates(models.Model):
     product_id = fields.Many2one(
         'product.product', 'Product Variant', required=True,
         domain=lambda self : self.get_domain_product())
-    polish_rate = fields.Float('Polish Rate (per piece)', digits=(16,2), default=0.00)
+    polish_rate = fields.Float('Automatic Polish Rate (per piece)', digits=(16,2), default=0.00)
+    polish_rate_manual = fields.Float('Manual Polish Rate (per piece)', digits=(16,2), default=0.00)
+    
     packaging_rate = fields.Float('Packaging Rate (per piece)', digits=(16,2), default=0.00)
     start_date = fields.Date('Start Date', default=fields.Date.context_today)
     end_date = fields.Date('End Date')
@@ -456,11 +481,17 @@ class packagingLine(models.Model):
     qty = fields.Float('Quantity', default=0.00,
         readonly=True, states={'draft': [('readonly', False)]},
         digits=dp.get_precision('Product Unit of Measure'))
+    polish_type = fields.Selection([
+        ('Automatic', 'Automatic'),
+        ('Manual', 'Manual')],
+        states={'draft': [('readonly', False)]},
+        string='Polish Type')
     state = fields.Selection([
         ('draft', 'Draft'),
         ('done', 'Done')],
         string='Status',
         default='draft')
+    
 
 
     @api.one
@@ -469,13 +500,12 @@ class packagingLine(models.Model):
         selectDate = datetime.strptime(self.package_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
         pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        if not pastdays and today != selectDate:
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
-        if not future_days and today != selectDate:
-            raise ValidationError(_('Date must be today date'))
         futureDate = today + timedelta(days=int(future_days))
+        _logger.info("futureDate===========%s" %(futureDate))
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
         lang_id = lang._lang_get(lang_code)
@@ -547,13 +577,12 @@ class OperationDetailLine(models.Model):
         selectDate = datetime.strptime(self.operation_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
         pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        if not pastdays and today != selectDate:
+        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
-        if not future_days and today != selectDate:
-            raise ValidationError(_('Date must be today date'))
         futureDate = today + timedelta(days=int(future_days))
+        _logger.info("futureDate===========%s" %(futureDate))
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
         lang_id = lang._lang_get(lang_code)

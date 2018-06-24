@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<report
+			id="gst_invoice_xlsx"
+			model="account.invoice"
+			string="Print Invoice"
+			report_type="xlsx"
+			name="account.invoice.gst1.xlsx"
+			file="account.invoice.gst1.xlsx"
+			attachment_use="False"
+		/>
+	</data>
+</odoo>

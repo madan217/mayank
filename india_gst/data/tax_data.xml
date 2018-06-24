@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="igst28_standard_sales" model="account.tax">
+            <field name="name">(standard)Input IGST @ 28%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">28.0</field>
+        </record>
+
+        <record id="cgst14_standard_sales" model="account.tax">
+            <field name="name">(standard)Input CGST @ 14%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">14.0</field>
+        </record>
+
+        <record id="sgst14_standard_sales" model="account.tax">
+            <field name="name">(standard)Input SGST @ 14%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">14.0</field>
+        </record>
+        <record id="igst18_standard_sales" model="account.tax">
+            <field name="name">(standard)Input IGST @ 18%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">18.0</field>
+        </record>
+        <record id="cgst9_standard_sales" model="account.tax">
+            <field name="name">(standard)Input CGST @ 9%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">9.0</field>
+        </record>
+        <record id="sgst9_standard_sales" model="account.tax">
+            <field name="name">(standard)Input SGST @ 9%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">9.0</field>
+        </record>
+        <record id="igst12_standard_sales" model="account.tax">
+            <field name="name">(standard)Input IGST @ 12%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">12.0</field>
+        </record>
+        <record id="cgst6_standard_sales" model="account.tax">
+            <field name="name">(standard)Input CGST @ 6%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">6.0</field>
+        </record>
+        <record id="sgst6_standard_sales" model="account.tax">
+            <field name="name">(standard)Input SGST @ 6%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">6.0</field>
+        </record>
+        <record id="igst5_standard_sales" model="account.tax">
+            <field name="name">(standard)Input IGST @ 5%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">5.0</field>
+        </record>
+        <record id="cgst2_5_standard_sales" model="account.tax">
+            <field name="name">(standard)Input CGST @ 2.5%</field>
+            <field name="type_tax_use">sale</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">2.5</field>
+        </record>
+        <record id="sgst2_5_standard_sales" model="account.tax">
+             <field name="name">(standard)Input SGST @ 2.5%</field>
+             <field name="type_tax_use">sale</field>
+             <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+             <field name="amount">2.5</field>
+        </record>
+
+
+        <record id="igst28_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output IGST @ 28%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">28.0</field>
+        </record>
+
+        <record id="cgst14_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output CGST @ 14%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">14.0</field>
+        </record>
+
+        <record id="sgst14_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output SGST @ 14%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">14.0</field>
+        </record>
+        <record id="igst18_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output IGST @ 18%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">18.0</field>
+        </record>
+        <record id="cgst9_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output CGST @ 9%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">9.0</field>
+        </record>
+        <record id="sgst9_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output SGST @ 9%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">9.0</field>
+        </record>
+        <record id="igst12_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output IGST @ 12%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">12.0</field>
+        </record>
+        <record id="cgst6_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output CGST @ 6%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+            <field name="amount">6.0</field>
+        </record>
+        <record id="sgst6_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output SGST @ 6%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">sgst</field>
+            <field name="amount">6.0</field>
+        </record>
+        <record id="igst5_out_standard_sales" model="account.tax">
+            <field name="name">(standard)Output IGST @ 5%</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="amount_type">percent</field>
+            <field name="tax_type">igst</field>
+            <field name="amount">5.0</field>
+        </record>
+        <record id="cgst2_5_out_standard_sales" model="account.tax">
+           <field name="name">(standard)Output CGST @ 2.5%</field>
+           <field name="type_tax_use">purchase</field>
+           <field name="amount_type">percent</field>
+            <field name="tax_type">cgst</field>
+           <field name="amount">2.5</field>
+       </record>
+       <record id="sgst2_5_out_standard_sales" model="account.tax">
+          <field name="name">(standard)Output SGST @ 2.5%</field>
+          <field name="type_tax_use">purchase</field>
+          <field name="amount_type">percent</field>
+          <field name="tax_type">sgst</field>
+          <field name="amount">2.5</field>
+      </record>
+    </data>
+</odoo>

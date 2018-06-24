@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<report
+			id="gstr_b2cs_report"
+			model="account.invoice"
+			string="GSTR-B2CS"
+			report_type="xlsx"
+			name="account.gstr.b2cs.xlsx"
+			file="account.gstr.b2cs.xlsx"
+			attachment_use="False"
+		    menu="False"
+		/>
+	</data>
+</odoo>

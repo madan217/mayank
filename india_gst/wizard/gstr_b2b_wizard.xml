@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="wizard_gstr_b2b_view" model="ir.ui.view">
+        <field name="name">GSTR.B2B.Form</field>
+        <field name="model">gstr.b2b</field>
+        <field name="arch" type="xml">
+            <form string="Choose your date">
+                <p class="oe_gray">
+                    Choose a Dates of Invoice To Generate GSTR B2B Report in Xlsx.
+                </p>
+                <group>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                </group>
+                <footer>
+                    <button name="print_b2b_report" string="Generate B2B Report" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="wizard_gstr_b2b_action" model="ir.actions.act_window">
+        <field name="name">GSTR B2B Report Between Choosen Dates</field>
+        <field name="res_model">gstr.b2b</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wizard_gstr_b2b_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="main_menu_wizard_gstr" parent="account.menu_finance" sequence="3" name="GSTR Report"/>
+    <!-- <menuitem id="menu_gstr_reports" name="GSTR Reports" parent="menu_gstr"/> -->
+    <menuitem id="menu_gstr_b2b" action="wizard_gstr_b2b_action" parent="main_menu_wizard_gstr" name="GSTR-B2B"/>
+</odoo>

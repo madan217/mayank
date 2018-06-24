@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_tax,access_account_tax,model_account_tax,,1,0,0,0
+access_res_partner,access_res_partner,model_res_partner,,1,0,0,0
+access_product_template,access_product_template,model_product_template,,1,0,0,0
+access_res_country_state,access_res_country_state,model_res_country_state,,1,0,0,0
+access_gst_invoice_tax_line,access_gst_invoice_tax_line,model_gst_invoice_tax_line,,1,0,0,0
+access_purchase_order,access_purchase_order,model_purchase_order,,1,0,0,0
+access_gst_tax_purchase_line,access_gst_tax_purchase_line,model_gst_tax_purchase_line,,1,0,0,0
+access_gst_tax_line,access_gst_tax_line,model_gst_tax_line,,1,0,0,0
+access_sale_order,access_sale_order,model_sale_order,,1,0,0,0
+access_port_code,access_port_code,model_port_code,,1,0,0,0
+access_check_date,access_check_date,model_check_date,,1,0,0,0
+

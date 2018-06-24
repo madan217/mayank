@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tax_inherit_form" model="ir.ui.view">
+        <field name="name">account.tax.inherit.form</field>
+        <field name="model">account.tax</field>
+        <field name="inherit_id" ref="account.view_tax_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="tax_type" widget="selection"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="view_partner_form_details" model="ir.ui.view">
+        <field name="name">view.partner.form.details</field>
+        <field name="model">res.partner</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="account.view_partner_property_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//page[@name='accounting']" position="after">
+                    <page string="GST" name="gst">
+                        <group string="GST">
+                                <group>
+                                    <field name="gstin_registered"/>
+                                    <field name="gstin" attrs="{'invisible': [('gstin_registered','=',False)]}"/>
+                                    <field name="cin_no" />
+                                </group>
+                                <group>
+                                    <field name="e_commerce"/>
+                                    <field name="e_commerce_tin" attrs="{'invisible': [('e_commerce','=',False)]}"/>
+                                    <field name="pan_no" />
+                                </group>
+                         </group>
+                    </page>
+
+                    <!-- <field name="state_code" /> -->
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="product_gst_form_view" model="ir.ui.view">
+        <field name="name">product.template.gst.form</field>
+        <field name="model">product.template</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//page[@name='invoicing']//group//group//field[@name='property_account_income_id']" position="after">
+                    <field name="hsn_code" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="gst_invoice_supplier_form" model="ir.ui.view">
+        <field name="name">gst.invoice.supplier.form</field>
+        <field name="model">account.invoice</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="account.invoice_supplier_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <field name="elec_ref" />
+                </xpath>
+                <xpath expr="//field[@name='invoice_line_tax_ids']" position="after">
+
+                            <field name="cgst" />
+                            <field name="sgst" />
+                            <field name="igst" />
+                            <!-- <field name="amount" /> -->
+                </xpath>
+                <xpath expr="//field[@name='discount']" position="attributes">
+                    <attribute name = "invisible">True</attribute>
+                </xpath>
+                <xpath expr="//field[@name='igst']" position="after">
+                    <field name="discount"/>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="gst_invoice_customer_form" model="ir.ui.view">
+        <field name="name">gst.invoice.customer.form</field>
+        <field name="model">account.invoice</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="account.invoice_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <field name="elec_ref" />
+                    <field name="invoice_type"/>
+                    <field name="flag_field" invisible="1"/>
+                    <field name="export_invoice"/>
+                </xpath>
+                <xpath expr="//field[@name='team_id']" position="after">
+                    <field name="e_commerce_operator" />
+                    <field name="export_type" attrs="{'invisible': [('export_invoice','=',False)]}"/>
+                </xpath>
+               <xpath expr="//field[@name='invoice_line_tax_ids']" position="after">
+                   <field name="cgst" />
+                   <field name="sgst" />
+                   <field name="igst" />
+                </xpath>
+
+                <xpath expr="//page//group//field[@name='name']" position="after">
+                   <field name="ship_bill_no" attrs="{'invisible':[('invoice_type', '=', 'Regular')]}"/>
+                   <field name="ship_bill_date" attrs="{'invisible':[('invoice_type', '=', 'Regular')]}"/>
+                   <field name="port_code" attrs="{'invisible':[('invoice_type', '=', 'Regular')]}"/>
+                </xpath>
+                <!-- <xpath expr="//field[@name='invoice_line_tax_ids']" position="attributes"> -->
+                <!--     <attribute name="invisible">True</attribute> -->
+                <!-- </xpath> -->
+                <!-- <xpath expr="//field[@name='discount']" position="attributes"> -->
+                <!--     <attribute name="invisible">True</attribute> -->
+                <!-- </xpath> -->
+            </data>
+        </field>
+    </record>
+
+    <record id="view_country_state_custom_tree" model="ir.ui.view">
+        <field name="name">res.country.custom.state.tree</field>
+        <field name="model">res.country.state</field>
+        <field name="inherit_id" ref="base.view_country_state_tree"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='country_id']" position="after">
+                    <field name="state_code" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>
+

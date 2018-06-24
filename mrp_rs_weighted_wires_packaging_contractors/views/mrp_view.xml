@@ -19,6 +19,10 @@
             <field name="model">mrp.production</field>
             <field name="inherit_id" ref="mrp.mrp_production_form_view" />
             <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="parent_id"/>
+                    <field name="mo_chain"/>
+                </field>
             	<field name="bom_id" position="replace"/>
             	<field name="product_id" position="after">
             		<field name="bom_id"
@@ -72,6 +76,7 @@
                             <tree editable="bottom" decoration-muted="state in ('done','cancel')">
                                 <field name="polished_by" required="1"/>
                                 <field name="packed_by" required="1"/>
+                                <field name="polish_type" required="1" attrs="{'readonly':[('state', '=', 'done')]}"/>
                                 <field name="package_date" required="1"/>
                                 <field name="qty"/>
                                 <field name="mo_id" invisible="1"/>
@@ -133,12 +138,13 @@
             <field name="model">contractor.rate</field>
             <field name="arch" type="xml">
                 <tree editable="bottom">
-                    <field name="product_id"/>
-                    <field name="polish_rate"/>
-                    <field name="packaging_rate"/>
-                    <field name="start_date"/>
-                    <field name="end_date"/>
-                    <field name="active"/>
+                    <field name="product_id" required="1"/>
+                    <field name="polish_rate" required="1"/>
+                    <field name="polish_rate_manual" required="1"/>
+                    <field name="packaging_rate" required="1"/>
+                    <field name="start_date" required="1"/>
+                    <field name="end_date" required="1"/>
+                    <field name="active" required="1"/>
                 </tree>
             </field>
         </record>

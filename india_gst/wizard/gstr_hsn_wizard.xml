@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="wizard_gstr_hsn_view" model="ir.ui.view">
+        <field name="name">GSTR.HSN.Form</field>
+        <field name="model">gstr.hsn</field>
+        <field name="arch" type="xml">
+            <form string="Choose your date">
+                <p class="oe_gray">
+                    Choose a Dates of Invoice To Generate GSTR HSN Report in Xlsx.
+                </p>
+                <group>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                </group>
+                <footer>
+                    <button name="print_hsn_report" string="Generate HSN Summary" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="wizard_gstr_hsn_action" model="ir.actions.act_window">
+        <field name="name">GSTR HSN Report Between Choosen Dates</field>
+        <field name="res_model">gstr.hsn</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wizard_gstr_hsn_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- <menuitem id="menu_gstr" name="GSTR" parent="account.menu_finance" sequence="5" groups="account.group_account_manager"/> -->
+    <!-- <menuitem id="menu_gstr_reports" name="GSTR Reports" parent="menu_gstr"/> -->
+    <menuitem id="menu_gstr_hsn" action="wizard_gstr_hsn_action" parent="main_menu_wizard_gstr" name="GSTR-HSN"/>
+</odoo>

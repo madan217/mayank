@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_invoice_document">
+             <t t-call="india_gst.external_layout_invoice">
+                    <div class="page">
+                   <div class="row" style="font-size:11px">
+                        <div class="col-xs-12">
+                            <table class="table table-bordered">
+                            <tr>
+                                    <td colspan="15">
+                                        <center><h3>Invoice Report</h3></center>
+                                    </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <b> Company GSTIN No: </b>
+                                    <!-- Tax Is Payable On Reverse Charge: (Yes/No)<br/> -->
+                                </td>
+                                <td colspan="13">
+                                    <span t-field="o.company_id.vat"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="2">
+                                     <b>Invoice No.: </b>
+                                </td>
+                                <td colspan="13">
+                                        <span t-if="o.type == 'out_invoice' and (o.state == 'open' or o.state == 'paid')">Invoice</span>
+                                        <span t-if="o.type == 'out_invoice' and o.state == 'proforma2'">PRO-FORMA</span>
+                                        <span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span>
+                                        <span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span>
+                                        <span t-if="o.type == 'out_refund'">Refund</span>
+                                        <span t-if="o.type == 'in_refund'">Vendor Refund</span>
+                                        <span t-if="o.type == 'in_invoice'">Vendor Bill</span>
+                                        <span t-field="o.number"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <b>Invoice Date: </b>
+                                </td>
+                                <td colspan="13">
+                                    <span t-field="o.date_invoice" t-field-options="{&quot;format&quot;: &quot;dd-MM-yyyy&quot;}" />
+                                </td>
+                            </tr>
+                                <!-- <td colspan="8"> -->
+                                <!--     <b> Transportation Mode: </b><small>(Apply for Supply of Goods only)</small><br/> -->
+                                <!--     <b>Vehicle No : </b><br/> -->
+                                <!--     <b>Date of Supply: </b><span t-field="o.date_due" t-field-options="{&quot;format&quot;: &quot;dd-MM-yyyy&quot;}" /><br/> -->
+                                <!--     <b>Place OF Supply:</b> -->
+                                <!-- </td> -->
+                            <tr>
+                                <td colspan="7"> <center><b>Details of Receiver</b></center></td>
+                                 <td colspan="8"><center><b>Details of Consignee(shipped to)</b></center></td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="1"><b>Name:</b></td>
+                                <td colspan="6"><t t-esc="o.partner_id.name"/></td>
+                                <td colspan="2"><b>Name:</b></td>
+                                <td colspan="6">
+                                    <t t-esc="o.partner_shipping_id.name"/>
+                                    <t t-if="not o.partner_shipping_id">
+                                        <t t-esc="o.partner_id.name"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                             <tr>
+                                <td colspan="1"><b>Address:</b></td>
+                                <td colspan="6"><t t-esc="o.partner_id.street"/><span>,</span><t t-esc="o.partner_id.street2"/><span>,</span><t t-esc="o.partner_id.city"/></td>
+                                <td colspan="2"><b>Address::</b></td>
+                                <td colspan="6">
+                                    <t t-esc="o.partner_shipping_id.street"/><span>,</span><t t-esc="o.partner_shipping_id.street2"/><span>,</span><t t-esc="o.partner_shipping_id.city"/>
+                                    <t t-if="not o.partner_shipping_id">
+                                        <t t-esc="o.partner_id.street"/><span>,</span><t t-esc="o.partner_id.street2"/><span>,</span><t t-esc="o.partner_id.city"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="1"><b>State/Country:</b></td>
+                                <td colspan="6"><t t-esc="o.partner_id.state_id.name"/><span>,</span><t t-esc="o.partner_id.country_id.name"/></td>
+                                <td colspan="2"><b>State/Country:</b></td>
+                                <td colspan="6">
+                                    <t t-esc="o.partner_shipping_id.state_id.name"/><span>,</span><t t-esc="o.partner_shipping_id.country_id.name"/>
+                                    <t t-if="not o.partner_shipping_id">
+                                        <t t-esc="o.partner_id.state_id.name"/><span>,</span><t t-esc="o.partner_id.country_id.name"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="1"><b>State Code:</b></td>
+                                <td colspan="6"><t t-esc="o.partner_id.state_id.state_code"/></td>
+                                <td colspan="2"><b>State Code:</b></td>
+                                <td colspan="6">
+                                    <t t-esc="o.partner_shipping_id.state_id.state_code"/>
+                                    <t t-if="not o.partner_shipping_id">
+                                        <t t-esc="o.partner_id.state_id.state_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="1"><b>GSTIN No.:</b></td>
+                                <td colspan="6"><t t-esc="o.partner_id.gstin"/></td>
+                                <td colspan="2"><b>GSTIN No:</b></td>
+                                <td colspan="6">
+                                    <t t-esc="o.partner_shipping_id.gstin"/>
+                                    <t t-if="not o.partner_shipping_id">
+                                        <t t-esc="o.partner_id.gstin"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <td rowspan="2"><b>No</b></td>
+                                <td width="30%" rowspan="2"><b> Description of Goods</b></td>
+                                <td width="10%" rowspan="2"><b>HSN Code (GST)</b></td>
+                                <td width="3%" rowspan="2"><b>Qty</b></td>
+                                <td width="3%" rowspan="2"><b>UOM</b></td>
+                                <td width="3%" rowspan="2"><b>Rate</b></td>
+                                <!-- <td width="5%" rowspan="2"><b>Total</b></td> -->
+                                <td width="4%" rowspan="2"><b>Discount</b></td>
+                                <td width="5%" rowspan="2"><b>Taxable values</b></td>
+                                <td width="10%" colspan="2" align="center"><b>CGST</b></td>
+                                <td width="10%" colspan="2" align="center"><b>SGST</b></td>
+                                <td width="10%" align="center" colspan="2" ><b>IGST</b></td>
+                            </tr>
+                            <tr>
+
+                                <td width="5%" align="center"><b>Rate</b></td>
+                                <td width="5%" align="center"><b>Amount</b></td>
+                                <td width="5%" align="center"><b>Rate</b></td>
+                                <td width="5%" align="center"><b>Amount</b></td>
+                                <td width="5%" align="center"><b>Rate</b></td>
+                                <td width="5%" align="center"><b>Amount</b></td>
+                            </tr>
+
+
+
+                            <t t-set = "total_cgst" t-value = "0" />
+                            <t t-set = "total_sgst" t-value = "0" />
+                            <t t-set = "total_igst" t-value = "0" />
+
+                            <tr t-foreach="o.invoice_line_ids" t-as="l">
+		                            <td> <span t-esc="l_index+1"/></td>
+		                            <td><span t-esc="l.name"/></td>
+		                            <td><t  t-if = "l.product_id.hsn_code"><span t-esc="l.product_id.hsn_code"/></t></td>
+		                            <td>
+		                                <span t-field="l.quantity"/>
+		                            </td>
+		                            <td><span t-esc="l.uom_id.name"/></td>
+		                            <td align="right">
+		                                <span t-field="l.price_unit" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+		                            </td>
+		                            <!-- <td align="right"> -->
+		                            <!--     <span t-field="l.price_subtotal" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/> -->
+		                            <!-- </td> -->
+		                            <td>
+		                                <t t-if="l.discount">
+		                                <span t-field="l.discount"/>
+		                                </t>
+		                            </td>
+		                           <td align="right">
+		                                <span t-field="l.price_subtotal" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+		                            </td>
+
+
+
+
+                                    <t t-set = "tax_cgst" t-value = "0" />
+                                    <t t-set = "tax_sgst" t-value = "0" />
+                                    <t t-set = "tax_igst" t-value = "0" />
+
+                                    <t t-foreach = "l.invoice_line_tax_ids" t-as = "t1">
+                                        <t t-if = "t1.tax_type == 'cgst'">
+                                            <t t-set="tax_cgst" t-value = "round(t1.amount,2)" />
+                                        </t>
+
+                                        <t t-if = "t1.tax_type == 'sgst'">
+                                            <t t-set="tax_sgst" t-value = "round(t1.amount,2)" />
+                                        </t>
+
+                                        <t t-if = "t1.tax_type == 'igst'">
+                                            <t t-set="tax_igst" t-value = "round(t1.amount,2)" />
+                                        </t>
+                                    </t>
+
+		                            <td><span t-esc = "tax_cgst"/><span>%</span></td>
+		                            <td><span t-field = "l.cgst"/></td>
+                                    <t t-set = "total_cgst" t-value = "total_cgst + l.cgst"/>
+
+
+		                            <td><span t-esc = "tax_sgst"/><span>%</span></td>
+		                            <td><span t-field = "l.sgst"/></td>
+                                    <t  t-set = "total_sgst" t-value = "total_sgst + l.sgst"/>
+
+		                            <td><span t-esc = "tax_igst"/><span>%</span></td>
+		                            <td><span t-field = "l.igst" /></td>
+                                    <t t-set = "total_igst" t-value = "total_igst + l.igst"/>
+
+                            </tr>
+
+                            <tr>
+                                <td colspan="8" align="center"></td>
+                                <!-- <td colspan="4" align="center"><b>Amount</b></td> -->
+                                <td colspan="4" align="right"><b>Subtotal</b></td>
+                                <td colspan="3" align="right">
+                                    <span t-field="o.amount_untaxed" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+                                </td>
+                            </tr>
+                            <!-- <tr> -->
+
+                                <!-- <td rowspan="3" colspan="9" align="center"> -->
+                                <!--      <span t-field="o.amount_total"/> -->
+                                <!-- </td> -->
+                                <!-- <td colspan="5" align="right"><b>Add : CGST</b> </td> -->
+                                <!-- <td>-</td> -->
+                            <!-- </tr> -->
+                            <!-- <tr> -->
+                            <!--     <td colspan="5" align="right"><b>Add : SGST</b></td> -->
+                            <!--     <td>-</td> -->
+                            <!-- </tr> -->
+                            <!-- <tr> -->
+                            <!--     <td colspan="5" align="right"><b>Add : IGST</b></td> -->
+                            <!--     <td>-</td> -->
+                            <!-- </tr> -->
+
+
+                            <tr>
+                                <td colspan="4" align="center"><b>Tax Description</b></td>
+                                <td colspan="4" align="center"><b>Amount</b></td>
+
+                                <td colspan="4" align="right"><b>Tax Amount : GST</b></td>
+                                <td colspan="3" align="right"><span t-esc = "total_cgst + total_sgst + total_igst" t-esc-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" align="center">
+                                    <t t-foreach = "o.tax_line_ids" t-as = "tax">
+                                     <span t-field="tax.name"/>
+                                     <br/>
+                                    </t>
+                                </td>
+                                <td colspan="4" align="center">
+                                    <t t-foreach = "o.tax_line_ids" t-as = "tax">
+                                     <span t-field="tax.amount"/>
+                                     <br/>
+                                    </t>
+                                </td>
+                                <td colspan="4" align="right"><b>Grand Total</b></td>
+                                <td colspan="3" align="right">
+                                    <span t-field="o.amount_total" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="8" align="center"><b>Certified that the Particulars given above are true and correct</b></td>
+                                <td colspan="7" align="center"><b>Electronic Reference Number :</b></td>
+                            </tr>
+                            <tr>
+                                <td colspan="8" ></td>
+                                <td colspan="7" align = "center"><span t-esc = "o.elec_ref" /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="8" align="center"><b>YOUR TERM and CONDITION OF SALE</b></td>
+                                <td colspan="7" align="center"><b>For, <t t-esc="o.company_id.name"/></b></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="4" colspan="8"><t t-esc="o.comment"/></td>
+                                <td colspan="7" height = "15%">Signature:</td>
+                            </tr>
+                            <tr>
+                                <td colspan="7" align="center"><b>Authorised Signatory</b></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">Name:<t t-esc="o.user_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">Designation:</td>
+                            </tr>
+                        </table>
+                        </div>
+                </div>
+                 </div>
+            </t>
+
+        </template>
+         <template id="report_invoice_gst">
+            <t t-call="report.html_container">
+                <t t-foreach="docs" t-as="o">
+                     <t t-call="india_gst.report_invoice_document" t-lang="o.name"/>
+                 </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>
+
