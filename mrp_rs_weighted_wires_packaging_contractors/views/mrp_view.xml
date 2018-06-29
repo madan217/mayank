@@ -61,7 +61,7 @@
                                 <field name="wire_issued" required="1"/>
                                 <field name="qty_produced"/>
                                 <field name="mo_id" invisible="1"/>
-                                <field name="state" invisible="1"/>
+                                <field name="state" invisible="0" readonly="1"/>
                             </tree>
                         </field>
                         <group>
@@ -76,11 +76,11 @@
                             <tree editable="bottom" decoration-muted="state in ('done','cancel')">
                                 <field name="polished_by" required="1"/>
                                 <field name="packed_by" required="1"/>
-                                <field name="polish_type" required="1" attrs="{'readonly':[('state', '=', 'done')]}"/>
+                                <field name="polish_type" required="1" attrs="{'readonly':[('state', 'in', ['done','approved'])]}"/>
                                 <field name="package_date" required="1"/>
                                 <field name="qty"/>
                                 <field name="mo_id" invisible="1"/>
-                                <field name="state" invisible="1"/>
+                                <field name="state" invisible="0" readonly="1"/>
                             </tree>
                         </field>
                         <group>
@@ -99,7 +99,7 @@
                                 <field name="weight_piece" required="1"/>
                                 <field name="qty" required="1"/>
                                 <field name="mo_id" invisible="1"/>
-                                <field name="state" invisible="1"/>
+                                <field name="state" invisible="0" readonly="1"/>
                             </tree>
                         </field>
                         <group>

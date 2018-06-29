@@ -158,6 +158,18 @@ class mrpProductionInh(models.Model):
                 'date_start': datetime.now(),
             })
         self.post_inventory()
+        if self.weighted_wire_lines:
+            for wrl in self.weighted_wire_lines:
+                if wrl.state == 'approved':
+                    wrl.state = 'done'
+        if self.packaging_lines:
+            for pl in self.packaging_lines:
+                if pl.state == 'approved':
+                    pl.state = 'done'
+        if self.operation_lines:
+            for ol in self.operation_lines:
+                if ol.state == 'approved':
+                    ol.state = 'done'
 
     @api.multi
     def check_finished_move_lots(self, quantity):
@@ -242,7 +254,8 @@ class mrpProductionInh(models.Model):
                 production.write({'product_qty': wizard.wire_qty})
                 if production.weighted_wire_lines:
                     for wrl in production.weighted_wire_lines:
-                        wrl.state = 'done'
+                        if wrl.state == 'draft':
+                            wrl.state = 'approved'
             elif wizard._context.get('package_approve', False):
                 if wizard.packaging_qty < wizard.product_qty:
                     raise UserError(_("Approve quantity must be higher than quantity to produce"))
@@ -251,7 +264,8 @@ class mrpProductionInh(models.Model):
                 production.write({'product_qty': wizard.packaging_qty})
                 if production.packaging_lines:
                     for pl in production.packaging_lines:
-                        pl.state = 'done'
+                        if pl.state == 'draft':
+                            pl.state = 'approved'
             elif wizard._context.get('operation_approve', False):
                 if wizard.operation_qty < wizard.product_qty:
                     raise UserError(_("Approve quantity must be higher than quantity to produce"))
@@ -260,7 +274,8 @@ class mrpProductionInh(models.Model):
                 production.write({'product_qty': wizard.operation_qty})
                 if production.operation_lines:
                     for ol in production.operation_lines:
-                        ol.state = 'done'
+                        if ol.state == 'draft':
+                            ol.state = 'approved'
             done_moves = production.move_finished_ids.filtered(lambda x: x.state == 'done' and x.product_id == production.product_id)
             qty_produced = production.product_id.uom_id._compute_quantity(sum(done_moves.mapped('product_qty')), production.product_uom_id)
             factor = production.product_uom_id._compute_quantity(production.product_qty - qty_produced, production.bom_id.product_uom_id) / production.bom_id.product_qty
@@ -369,6 +384,7 @@ class weightedWireLine(models.Model):
     mo_id = fields.Many2one('mrp.production', string='MO', ondelete='cascade')
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('approved', 'Approved'),
         ('done', 'Done')],
         string='Status',
         default='draft',
@@ -398,7 +414,7 @@ class weightedWireLine(models.Model):
 
     @api.multi
     def unlink(self):
-        if self.state == 'done':
+        if self.state in ['done','approved']:
             raise UserError(_('Cannot delete a record'))
         return super(weightedWireLine, self).unlink()
     # @api.model
@@ -488,6 +504,7 @@ class packagingLine(models.Model):
         string='Polish Type')
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('approved', 'Approved'),
         ('done', 'Done')],
         string='Status',
         default='draft')
@@ -536,7 +553,7 @@ class packagingLine(models.Model):
 
     @api.multi
     def unlink(self):
-        if self.state == 'done':
+        if self.state in ['done','approved']:
             raise UserError(_('Cannot delete a record'))
         return super(packagingLine, self).unlink()
 
@@ -567,6 +584,7 @@ class OperationDetailLine(models.Model):
         digits=dp.get_precision('Product Unit of Measure'))
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('approved', 'Approved'),
         ('done', 'Done')],
         string='Status',
         default='draft')
@@ -595,7 +613,7 @@ class OperationDetailLine(models.Model):
 
     @api.multi
     def unlink(self):
-        if self.state == 'done':
+        if self.state in ['done','approved']:
             raise UserError(_('Cannot delete a record'))
         return super(OperationDetailLine, self).unlink()
 
