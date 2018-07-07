@@ -43,7 +43,7 @@ class mrpProductionInh(models.Model):
                 total += wr.qty_produced
             mr.wire_qty = total
 
-    @api.depends('packaging_lines')
+    @api.depends('packaging_lines', 'packaging_lines.qty')
     def compute_packaging_qty(self):
         for mr in self:
             total = 0.0
@@ -51,7 +51,7 @@ class mrpProductionInh(models.Model):
                 total += pl.qty
             mr.packaging_qty = total
 
-    @api.depends('operation_lines')
+    @api.depends('operation_lines', 'operation_lines.qty')
     def compute_operation_qty(self):
         for mr in self:
             total = 0.0
@@ -83,6 +83,7 @@ class mrpProductionInh(models.Model):
         digits=dp.get_precision('Product Unit of Measure'))
     parent_id = fields.Many2one('mrp.production', 'Parent MO')
     mo_chain = fields.Char('MO Chain', compute="compute_mo_chain")
+    weight = fields.Float('Weight', related='product_id.weight')
 
     def get_default_data(self):
         res = {}
@@ -218,7 +219,7 @@ class mrpProductionInh(models.Model):
     @api.model
     def _update_product_to_produce_custom(self, production, qty):
         production_move = production.move_finished_ids.filtered(lambda x:x.product_id.id == production.product_id.id and x.state not in ('done', 'cancel'))
-        # print "product move======",production_move
+        print "product move======",qty
         if production_move:
             production_move.write({'product_uom_qty': qty})
         else:
@@ -361,11 +362,18 @@ class weightedWireLine(models.Model):
     _description = 'Weighted Wire Lines'
 
     @api.multi
-    @api.depends('wire_issued')
+    @api.depends('wire_issued', 'wire_used')
     def compute_qty_produced(self):
         for wr in self:
             if wr.wire_used and (wr.wire_used.weight > 0):
                 wr.qty_produced = wr.wire_issued / (wr.wire_used.weight/1000)
+
+    @api.multi
+    @api.depends('scrap_weight', 'mo_id.product_id')
+    def compute_scrap_qty(self):
+        for wr in self:
+            if wr.scrap_weight and (wr.mo_id.weight > 0):
+                wr.scrap_qty = wr.scrap_weight / (wr.mo_id.weight)
 
     wire_date = fields.Date('Date', default=fields.Date.context_today,
                 readonly=True, states={'draft': [('readonly', False)]})
@@ -389,6 +397,10 @@ class weightedWireLine(models.Model):
         string='Status',
         default='draft',
         readonly=True, states={'draft': [('readonly', False)]})
+    scrap_weight = fields.Float(
+        'Scrap Weight (Kg)', digits=dp.get_precision('Stock Weight'))
+    scrap_qty = fields.Float('Scrap Qty (Pieces)', compute="compute_scrap_qty", store=True, default=0.00,
+        digits=dp.get_precision('Product Unit of Measure'))
 
     @api.one
     @api.constrains('wire_date')

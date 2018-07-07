@@ -25,6 +25,7 @@
                 </field>
             	<field name="bom_id" position="replace"/>
             	<field name="product_id" position="after">
+                    <field name="weight" readonly="1" attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}"/>
             		<field name="bom_id"
                         domain="['&amp;', '|',
                                     ('product_id','=',product_id),
@@ -54,12 +55,14 @@
                 <xpath expr="//page[1]" position="before">
                     <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="weighted_wire_lines" context="{'default_wire_used': wire_used}" options='{"reload_on_button": True}' attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
-                            <tree editable="bottom" decoration-muted="state in ('done')">
+                            <tree editable="bottom" decoration-muted="state in ('done','approved')">
                                 <field name="wire_used" required="1"/>
                                 <field name="wire_date" required="1"/>
                                 <field name="issued_to" required="1"/>
                                 <field name="wire_issued" required="1"/>
                                 <field name="qty_produced"/>
+                                <field name="scrap_weight"/>
+                                <field name="scrap_qty"/>
                                 <field name="mo_id" invisible="1"/>
                                 <field name="state" invisible="0" readonly="1"/>
                             </tree>
@@ -73,7 +76,7 @@
 
                     <page string="Packaging Details" attrs="{'invisible': ['|',('package_or_wire','in',['none', 'weighted_wire', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="packaging_lines" attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
-                            <tree editable="bottom" decoration-muted="state in ('done','cancel')">
+                            <tree editable="bottom" decoration-muted="state in ('done','approved')">
                                 <field name="polished_by" required="1"/>
                                 <field name="packed_by" required="1"/>
                                 <field name="polish_type" required="1" attrs="{'readonly':[('state', 'in', ['done','approved'])]}"/>
@@ -92,7 +95,7 @@
 
                     <page string="Operation Details" attrs="{'invisible': ['|',('package_or_wire','not in',['open_counter']),('package_or_wire','=', False)]}">
                         <field name="operation_lines" attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
-                            <tree editable="bottom" decoration-muted="state in ('done','cancel')">
+                            <tree editable="bottom" decoration-muted="state in ('done','approved')">
                                 <field name="operation_date" required="1"/>
                                 <field name="performed_by" required="1"/>
                                 <field name="weight_kg" required="1"/>

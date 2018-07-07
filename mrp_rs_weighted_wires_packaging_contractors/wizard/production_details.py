@@ -80,7 +80,7 @@ class ProductionDetailWizard(models.TransientModel):
                 if mo.package_or_wire == 'weighted_wire':
                     lines = mo.weighted_wire_lines
                     for l in lines:
-                        if l.wire_date >= self.start_date and l.wire_date <= self.end_date:
+                        if l.state == 'done' and l.wire_date >= self.start_date and l.wire_date <= self.end_date:
                             D[l.wire_date].append((mo.product_id.id,l.qty_produced, mo.product_id.display_name))
                             for mop in mopds:
                                 if mo.product_id.id != mop:
@@ -89,7 +89,7 @@ class ProductionDetailWizard(models.TransientModel):
                 elif mo.package_or_wire == 'polished':
                     lines = mo.packaging_lines
                     for l in lines:
-                        if l.package_date >= self.start_date and l.package_date <= self.end_date:
+                        if l.state == 'done' and l.package_date >= self.start_date and l.package_date <= self.end_date:
                             D[l.package_date].append((mo.product_id.id, l.qty, mo.product_id.display_name))
                             for mop in mopds:
                                 if mo.product_id.id != mop:
@@ -98,7 +98,7 @@ class ProductionDetailWizard(models.TransientModel):
                 elif mo.package_or_wire == 'open_counter':
                     lines = mo.operation_lines
                     for l in lines:
-                        if l.operation_date >= self.start_date and l.operation_date <= self.end_date:
+                        if l.state == 'done' and l.operation_date >= self.start_date and l.operation_date <= self.end_date:
                             D[l.operation_date].append((mo.product_id.id,l.qty, mo.product_id.display_name))
                             for mop in mopds:
                                 if mo.product_id.id != mop:
