@@ -137,6 +137,7 @@ class mrpProductionInh(models.Model):
         resDic = self.get_default_data()
         moves = self.move_raw_ids
         quantity = resDic['product_qty']
+        print ("quantity=========",quantity)
         if float_compare(quantity, 0, precision_rounding=self.product_uom_id.rounding) <= 0:
             raise UserError(_('You should at least produce some quantity'))
         for move in moves.filtered(lambda x: x.product_id.tracking == 'none' and x.state not in ('done', 'cancel')):
@@ -150,7 +151,10 @@ class mrpProductionInh(models.Model):
                 move.quantity_done_store += float_round(quantity, precision_rounding=rounding)
             elif move.unit_factor:
                 # byproducts handling
-                move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+                if move.product_uom_qty != quantity:
+                    move.quantity_done_store += float_round(move.product_uom_qty * move.unit_factor, precision_rounding=rounding)
+                else:
+                    move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
         self.check_finished_move_lots(quantity)
         # print "elf.production_id.state===========",self.production_id.state
         if self.state == 'confirmed':
@@ -215,6 +219,39 @@ class mrpProductionInh(models.Model):
         else:
             self.wire_used = self.bom_id.wire_used.id
 
+    def _create_byproduct_move(self, sub_product):
+        Move = self.env['stock.move']
+        for production in self:
+            source = production.product_id.property_stock_production.id
+            product_uom_factor = production.product_uom_id._compute_quantity(production.product_qty - production.qty_produced, production.bom_id.product_uom_id)
+            qty1 = sub_product.product_qty
+            qty1 *= product_uom_factor / production.bom_id.product_qty
+            data = {
+                'name': 'PROD:%s' % production.name,
+                'date': production.date_planned_start,
+                'product_id': sub_product.product_id.id,
+                'product_uom_qty': qty1,
+                'product_uom': sub_product.product_uom_id.id,
+                'location_id': source,
+                'location_dest_id': production.location_dest_id.id,
+                'operation_id': sub_product.operation_id.id,
+                'production_id': production.id,
+                'origin': production.name,
+                'unit_factor': qty1 / (production.product_qty - production.qty_produced),
+                'subproduct_id': sub_product.id
+            }
+            move = Move.create(data)
+            scrapQty = 0.0
+            if production.weighted_wire_lines:
+                    for wrl in production.weighted_wire_lines:
+                        if not wrl.weight_updated and wrl.state == 'approved':
+                            scrapQty += wrl.scrap_qty
+                            wrl.weight_updated = True
+            if move.product_id.id == 52:
+                move.product_uom_qty = move.product_uom_qty + scrapQty
+            else:
+                move.product_uom_qty = move.product_uom_qty
+            move.action_confirm()
 
     @api.model
     def _update_product_to_produce_custom(self, production, qty):
@@ -234,12 +271,23 @@ class mrpProductionInh(models.Model):
         for sub_product_line in production.bom_id.sub_products:
             move = production.move_finished_ids.filtered(lambda x: x.subproduct_id == sub_product_line and x.state not in ('done', 'cancel'))
             if move:
+                scrapQty = 0.0
+                if production.weighted_wire_lines:
+                    for wrl in production.weighted_wire_lines:
+                        if not wrl.weight_updated and wrl.state == 'approved':
+                            scrapQty += wrl.scrap_qty
+                            wrl.weight_updated = True
                 product_uom_factor = production.product_uom_id._compute_quantity(production.product_qty - production.qty_produced, production.bom_id.product_uom_id)
                 qty1 = sub_product_line.product_qty
                 qty1 *= product_uom_factor / production.bom_id.product_qty
-                move[0].write({'product_uom_qty': qty1})
+                print "move[0].product_id=========",move[0].product_id
+                if move[0].product_id.id == 52:
+                    move[0].write({'product_uom_qty': qty1+scrapQty})
+                else:
+                    move[0].write({'product_uom_qty': qty1})
             else:
                 production._create_byproduct_move(sub_product_line)
+
 
     @api.multi
     def change_prod_qty_custom(self):
@@ -401,6 +449,7 @@ class weightedWireLine(models.Model):
         'Scrap Weight (Kg)', digits=dp.get_precision('Stock Weight'))
     scrap_qty = fields.Float('Scrap Qty (Pieces)', compute="compute_scrap_qty", store=True, default=0.00,
         digits=dp.get_precision('Product Unit of Measure'))
+    weight_updated = fields.Boolean('Weight Updated')
 
     @api.one
     @api.constrains('wire_date')
@@ -628,6 +677,26 @@ class OperationDetailLine(models.Model):
         if self.state in ['done','approved']:
             raise UserError(_('Cannot delete a record'))
         return super(OperationDetailLine, self).unlink()
+
+
+class MrpSubProduct(models.Model):
+    _inherit = 'mrp.subproduct'
+
+    editable = fields.Boolean('Editable', default=False)
+
+
+class StockMove(models.Model):
+    _inherit = 'stock.move'
+
+    @api.multi
+    def _compute_editable(self):
+        print "_compute_editable========"
+        for mv in self:
+            for sub_product_line in mv.production_id.bom_id.sub_products:
+                if sub_product_line.product_id.id == mv.product_id.id and sub_product_line.editable:
+                    mv.editable = True
+
+    editable = fields.Boolean('Editable', default=False, compute='_compute_editable')
 
 
 # class MrpProductProduceInh(models.TransientModel):

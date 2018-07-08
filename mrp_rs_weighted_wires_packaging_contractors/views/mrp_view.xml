@@ -50,7 +50,13 @@
                  <xpath expr="//header/button[4]" position="replace">
                     <button name="open_produce_product" attrs="{'invisible': ['|', '|', '|', ('check_to_done', '=', True), ('availability', 'not in', ['assigned']), ('state', 'not in', ('confirmed','progress')), ('routing_id', '!=', False)]}" string="Produce" type="object" class="oe_highlight"/>
                  </xpath>
-
+                 <xpath expr="//field[@name='move_finished_ids']/tree/field[@name='product_id']" position="after">
+                    <field name="editable" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='move_finished_ids']/tree/field[@name='product_uom_qty']" position="attributes">
+                    <attribute name="readonly"></attribute>
+                    <attribute name="attrs">{'readonly': ['|',('editable', '=', False),('state', 'in', ('done', 'cancel'))]}</attribute>
+                </xpath>
 
                 <xpath expr="//page[1]" position="before">
                     <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}">
@@ -61,7 +67,8 @@
                                 <field name="issued_to" required="1"/>
                                 <field name="wire_issued" required="1"/>
                                 <field name="qty_produced"/>
-                                <field name="scrap_weight"/>
+                                <field name="scrap_weight" required="1"/>
+                                <field name="weight_updated" invisible="1"/>
                                 <field name="scrap_qty"/>
                                 <field name="mo_id" invisible="1"/>
                                 <field name="state" invisible="0" readonly="1"/>
@@ -158,6 +165,18 @@
             <field name="res_model">contractor.rate</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree</field>
+        </record>
+
+        <record id="mrp_subproduct_view_inh1" model="ir.ui.view">
+            <field name="name">mrp.bom.sub.product</field>
+            <field name="model">mrp.bom</field>
+            <field name="inherit_id" ref="mrp_byproduct.mrp_subproduct_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//page/field[@name='sub_products']/tree/field[@name='product_uom_id']" position="after">
+                    <field name="editable"/>
+                 </xpath>
+            </field>
         </record>
 
         <menuitem id="menu_mrp_contractor"
