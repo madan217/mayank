@@ -149,12 +149,11 @@ class mrpProductionInh(models.Model):
             rounding = move.product_uom.rounding
             if move.product_id.id == self.product_id.id:
                 move.quantity_done_store += float_round(quantity, precision_rounding=rounding)
-            elif move.unit_factor:
+            elif move.unit_factor and not move.product_id.id in [19, 52]:
                 # byproducts handling
-                if move.product_uom_qty != quantity:
-                    move.quantity_done_store += float_round(move.product_uom_qty * move.unit_factor, precision_rounding=rounding)
-                else:
-                    move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+                move.quantity_done_store += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+            if move.product_id.id in [19, 52]:
+                move.product_uom_qty = move.quantity_done
         self.check_finished_move_lots(quantity)
         # print "elf.production_id.state===========",self.production_id.state
         if self.state == 'confirmed':
@@ -226,6 +225,9 @@ class mrpProductionInh(models.Model):
             product_uom_factor = production.product_uom_id._compute_quantity(production.product_qty - production.qty_produced, production.bom_id.product_uom_id)
             qty1 = sub_product.product_qty
             qty1 *= product_uom_factor / production.bom_id.product_qty
+            print "qty1===========",qty1,"  kkk " , sub_product.product_id.name
+            print "production.product_qty==========",production.product_qty
+            print "production.qty_produced==========",production.qty_produced
             data = {
                 'name': 'PROD:%s' % production.name,
                 'date': production.date_planned_start,
@@ -242,13 +244,23 @@ class mrpProductionInh(models.Model):
             }
             move = Move.create(data)
             scrapQty = 0.0
-            if production.weighted_wire_lines:
+            SolidScrapWt = 0.0
+            # for FB Scrap Wt (kg)
+            if production.weighted_wire_lines and move.product_id.id == 52:
                     for wrl in production.weighted_wire_lines:
                         if not wrl.weight_updated and wrl.state == 'approved':
-                            scrapQty += wrl.scrap_qty
+                            scrapQty += wrl.scrap_weight
                             wrl.weight_updated = True
+            if production.weighted_wire_lines and move.product_id.id == 19:
+                    for wrl in production.weighted_wire_lines:
+                        if not wrl.solid_wt_updated and wrl.state == 'approved':
+                            SolidScrapWt += wrl.solid_scrap_wt
+                            wrl.solid_wt_updated = True
+            _logger.info('\n scrap weight=============%s'%(scrapQty))
             if move.product_id.id == 52:
-                move.product_uom_qty = move.product_uom_qty + scrapQty
+                move.quantity_done = move.quantity_done + scrapQty
+            elif move.product_id.id == 19:
+                move.quantity_done = move.quantity_done + SolidScrapWt
             else:
                 move.product_uom_qty = move.product_uom_qty
             move.action_confirm()
@@ -272,17 +284,26 @@ class mrpProductionInh(models.Model):
             move = production.move_finished_ids.filtered(lambda x: x.subproduct_id == sub_product_line and x.state not in ('done', 'cancel'))
             if move:
                 scrapQty = 0.0
-                if production.weighted_wire_lines:
+                SolidScrapWt = 0.0
+                # for FB Scrap Wt (kg)
+                if production.weighted_wire_lines and move[0].product_id.id == 52:
                     for wrl in production.weighted_wire_lines:
                         if not wrl.weight_updated and wrl.state == 'approved':
-                            scrapQty += wrl.scrap_qty
+                            scrapQty += wrl.scrap_weight
                             wrl.weight_updated = True
+                if production.weighted_wire_lines and move.product_id.id == 19:
+                    for wrl in production.weighted_wire_lines:
+                        if not wrl.solid_wt_updated and wrl.state == 'approved':
+                            SolidScrapWt += wrl.solid_scrap_wt
+                            wrl.solid_wt_updated = True
                 product_uom_factor = production.product_uom_id._compute_quantity(production.product_qty - production.qty_produced, production.bom_id.product_uom_id)
                 qty1 = sub_product_line.product_qty
                 qty1 *= product_uom_factor / production.bom_id.product_qty
-                print "move[0].product_id=========",move[0].product_id
+                _logger.info('\n scrap weight=============%s'%(scrapQty))
                 if move[0].product_id.id == 52:
-                    move[0].write({'product_uom_qty': qty1+scrapQty})
+                    move[0].write({'quantity_done': move[0].quantity_done + scrapQty})
+                elif move[0].product_id.id == 19:
+                    move[0].write({'quantity_done': move[0].quantity_done + SolidScrapWt})
                 else:
                     move[0].write({'product_uom_qty': qty1})
             else:
@@ -446,10 +467,15 @@ class weightedWireLine(models.Model):
         default='draft',
         readonly=True, states={'draft': [('readonly', False)]})
     scrap_weight = fields.Float(
-        'Scrap Weight (Kg)', digits=dp.get_precision('Stock Weight'))
-    scrap_qty = fields.Float('Scrap Qty (Pieces)', compute="compute_scrap_qty", store=True, default=0.00,
+        'FB Scrap Wt (kg)', digits=dp.get_precision('Stock Weight'),
+        readonly=True, states={'draft': [('readonly', False)]})
+    scrap_qty = fields.Float('FB Scrap Pieces', compute="compute_scrap_qty", store=True, default=0.00,
         digits=dp.get_precision('Product Unit of Measure'))
-    weight_updated = fields.Boolean('Weight Updated')
+    weight_updated = fields.Boolean('FB Wt Updated')
+    solid_scrap_wt = fields.Float(
+        'Solid Scrap Wt (kg)', digits=dp.get_precision('Stock Weight'),
+        readonly=True, states={'draft': [('readonly', False)]})
+    solid_wt_updated = fields.Boolean('Solid Wt Updated')
 
     @api.one
     @api.constrains('wire_date')
@@ -679,24 +705,24 @@ class OperationDetailLine(models.Model):
         return super(OperationDetailLine, self).unlink()
 
 
-class MrpSubProduct(models.Model):
-    _inherit = 'mrp.subproduct'
+# class MrpSubProduct(models.Model):
+#     _inherit = 'mrp.subproduct'
 
-    editable = fields.Boolean('Editable', default=False)
+#     editable = fields.Boolean('Editable', default=False)
 
 
-class StockMove(models.Model):
-    _inherit = 'stock.move'
+# class StockMove(models.Model):
+#     _inherit = 'stock.move'
 
-    @api.multi
-    def _compute_editable(self):
-        print "_compute_editable========"
-        for mv in self:
-            for sub_product_line in mv.production_id.bom_id.sub_products:
-                if sub_product_line.product_id.id == mv.product_id.id and sub_product_line.editable:
-                    mv.editable = True
+#     @api.multi
+#     def _compute_editable(self):
+#         print "_compute_editable========"
+#         for mv in self:
+#             for sub_product_line in mv.production_id.bom_id.sub_products:
+#                 if sub_product_line.product_id.id == mv.product_id.id and sub_product_line.editable:
+#                     mv.editable = True
 
-    editable = fields.Boolean('Editable', default=False, compute='_compute_editable')
+#     editable = fields.Boolean('Editable', default=False, compute='_compute_editable')
 
 
 # class MrpProductProduceInh(models.TransientModel):
