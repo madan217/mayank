@@ -1,6 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+
+        <record id="view_order_form_inh1" model="ir.ui.view">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <field name="partner_shipping_id" position="after">
+                    <field name="scrap_order"/>
+                </field>
+            </field>
+        </record>
+
+
+        <record id="vpicktree_inh1" model="ir.ui.view">
+            <field name="name">stock.picking.tree.inh</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.vpicktree"/>
+            <field name="arch" type="xml">
+                    <field name="state" position="after">
+                        <field name="total_qty"/>
+                    </field>
+            </field>
+        </record>
+
+        <record id="view_picking_form_inh1" model="ir.ui.view">
+            <field name="name">stock.picking.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <field name="origin" position="after">
+                        <field name="total_qty"/>
+                    </field>
+            </field>
+        </record>
+
         <!-- Bill of Materials -->
         <record id="mrp_bom_form_view_inh1" model="ir.ui.view">
             <field name="name">mrp.bom.form</field>
@@ -35,7 +70,8 @@
                                         ('type', '=', 'normal')]"
                         context="{'default_product_tmpl_id': product_tmpl_id}" required="1" attrs="{'readonly': [('has_moves', '=', True)]}"/>
                     <field name="package_or_wire" invisible="1"/>
-                    <field name="wire_used" attrs="{'invisible': [('package_or_wire','in',['none', 'polished', 'open_counter', False])],'required':[('package_or_wire','in',['weighted_wire'])]}"/>
+                    <field name="wire_used" invisible="1"/>
+                    <field name="wire_used_rel" attrs="{'invisible': [('package_or_wire','in',['none', 'polished', 'open_counter', False])],'required':[('package_or_wire','in',['weighted_wire'])]}"/>
                 </field>
                 <button name="%(mrp.action_change_production_qty)d" position="replace">
                 </button>
@@ -50,6 +86,10 @@
                  <xpath expr="//header/button[4]" position="replace">
                     <button name="open_produce_product" attrs="{'invisible': ['|', '|', '|', ('check_to_done', '=', True), ('availability', 'not in', ['assigned']), ('state', 'not in', ('confirmed','progress')), ('routing_id', '!=', False)]}" string="Produce" type="object" class="oe_highlight"/>
                  </xpath>
+                 <button name="button_mark_done" position="replace"/>
+                 <button name="button_unreserve" position="after">
+                    <button name="button_mark_done" attrs="{'invisible': [('check_to_done', '=', False)]}" string="Mark as Done" type="object" class="oe_highlight" confirm="Are You Sure To Done It ?"/>
+                </button>
                  <!-- <xpath expr="//field[@name='move_finished_ids']/tree/field[@name='product_id']" position="after">
                     <field name="editable" invisible="1"/>
                 </xpath> -->
@@ -62,7 +102,7 @@
                     <page string="Weighted Wires"  attrs="{'invisible': ['|',('package_or_wire','in',['none', 'polished', 'open_counter']),('package_or_wire','=', False)]}">
                         <field name="weighted_wire_lines" context="{'default_wire_used': wire_used}" options='{"reload_on_button": True}' attrs="{'readonly': [('state','in',['done', 'cancel'])]}">
                             <tree editable="bottom" decoration-muted="state in ('done','approved')">
-                                <field name="wire_used" required="1"/>
+                                <field name="wire_used" required="1" invisible="1"/>
                                 <field name="wire_date" required="1"/>
                                 <field name="issued_to" required="1"/>
                                 <field name="wire_issued" required="1"/>
@@ -72,6 +112,7 @@
                                 <field name="solid_wt_updated" invisible="1"/>
                                 <field name="weight_updated" invisible="1"/>
                                 <field name="scrap_qty"/>
+                                <field name="scrap_percent"/>
                                 <field name="mo_id" invisible="1"/>
                                 <field name="state" invisible="0" readonly="1"/>
                             </tree>
