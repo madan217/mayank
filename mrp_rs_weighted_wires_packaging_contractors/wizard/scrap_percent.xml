@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_scrap_percent_wizard" model="ir.ui.view">
+            <field name="name">scrap.percent.wizard</field>
+            <field name="model">report.mrp_rs_weighted_wires_packaging_contractors.scrap</field>
+            <field name="arch" type="xml">
+                <form string="Scrap %">
+                    <group>
+                        <group>
+                            <field name="start_date"/>
+                        </group>
+                        <group>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="print_scrap_percent" type="object" string="Print" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="act_scrap_percent_wizard" model="ir.actions.act_window">
+            <field name="name">Scrap %</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">report.mrp_rs_weighted_wires_packaging_contractors.scrap</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="context">{}</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_scrap_percent_report" name="Scrap %"
+            parent="mrp.menu_mrp_reporting" action="act_scrap_percent_wizard" sequence="10" />
+
+        <template id="scrap">
+                <t t-call="report.html_container">
+                    <t t-call="report.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <div class="row mt16 mb32">
+                            <div class="col-xs-12 text-center">
+                                    <h2>Scrap %</h2>
+                            </div>
+                            <div class="col-xs-12 text-left mt16">
+                                <strong>Period: </strong>
+                                <p><span t-esc="data['start_date']" t-options='{"widget": "date", "format": "dd/MM/yyyy"}'/> -  <span t-esc="data['end_date']" t-options='{"widget": "date", "format": "dd/MM/yyyy"}'/></p>
+                            </div>
+                        </div>
+                            <table class="table table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Total Scrap</th>
+                                        <th class="text-center">Total Consumed</th>
+                                        <th class="text-center">Scrap %</th>
+                                    </tr>
+                               </thead>
+                               <tbody class="sale_tbody">
+                                    <tr>
+                                        <td><span t-esc="data['total_scrap']"/></td>
+                                        <td class="text-center">
+                                            <span t-esc="data['total_consumed']"/>
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-esc="data['scrap_percent']"/>
+                                        </td>
+                                    </tr>
+                                </tbody>          
+                            </table>
+                    </div>
+                </t>
+                </t>
+            </template>
+
+
+          <report 
+            id="action_report_scrap_percent"
+            string="Scrap Percent"
+            model="report.mrp_rs_weighted_wires_packaging_contractors.scrap" 
+            report_type="qweb-pdf"
+            file="mrp_rs_weighted_wires_packaging_contractors.scrap" 
+            name="mrp_rs_weighted_wires_packaging_contractors.scrap" 
+        />
+</odoo>
+

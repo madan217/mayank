@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">	
+		<record id="sms_number_po" model="sms.number">
+            <field name="name">PO SMS Number</field>
+        </record>
+    </data>
+</odoo>

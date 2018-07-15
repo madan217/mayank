@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_register_excel_form" model="ir.ui.view">
+            <field name="name">excel.form</field>
+            <field name="model">report.excel</field>
+            <field name="arch" type="xml">
+                <form string="Excel Report file" create="0" edite="0">
+                    <group>
+                        <field name="excel_file" readonly="1" filename="file_name"/>
+                        <field name="file_name" invisible="1"/>
+                    </group>
+                    <footer>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+         <record id="complete_production_wizard_view" model="ir.ui.view">
+            <field name="name">complete.production</field>
+            <field name="model">complete.production</field>
+            <field name="arch" type="xml">
+                <form string="Complete Production Report">
+                    <group col="4">
+                        <field name="from_date" />
+                        <field name="to_date" />
+                    </group>
+                    <footer>
+                        <button name="print_complete_production_report_xls" string="Print" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <act_window name="Complete Production Report"
+            res_model="complete.production"
+            view_mode="form"
+            target="new"
+            id="complete_production_wizard_act_window"/>
+
+        <menuitem id="menu_complete_production_report" name="Complete Production"
+            parent="mrp.menu_mrp_reporting" action="complete_production_wizard_act_window" sequence="10" />
+
+</odoo>

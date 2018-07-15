@@ -64,7 +64,6 @@ class mrpProductionInh(models.Model):
         string='Wire Used',
         readonly=True, states={'confirmed': [('readonly', False)]},
         )
-    wire_used_rel = fields.Many2one('product.product', string='Wire Used', related='wire_used', readonly=True)
     package_or_wire = fields.Selection([
         ('weighted_wire', 'Uses Weighted Wire'),
         ('polished', 'Polished/Packed'),
@@ -445,18 +444,6 @@ class weightedWireLine(models.Model):
             if wr.scrap_weight and (wr.mo_id.weight > 0):
                 wr.scrap_qty = wr.scrap_weight / (wr.mo_id.weight)
 
-    @api.multi
-    @api.depends('mo_id.bom_id', 'scrap_weight', 'solid_scrap_wt')
-    def compute_scrap_percent(self):
-        for wr in self:
-            component_wt = 0.0
-            if wr.mo_id.bom_id:
-                for line in wr.mo_id.bom_id.bom_line_ids:
-                    component_wt += line.product_qty
-            if component_wt and wr.qty_produced:
-                wr.scrap_percent = ((wr.scrap_weight + wr.solid_scrap_wt) / (wr.qty_produced * component_wt)) * 100
-
-
     wire_date = fields.Date('Date', default=fields.Date.context_today,
                 readonly=True, states={'draft': [('readonly', False)]})
     wire_used = fields.Many2one(
@@ -489,7 +476,6 @@ class weightedWireLine(models.Model):
         'Solid Scrap Wt (kg)', digits=dp.get_precision('Stock Weight'),
         readonly=True, states={'draft': [('readonly', False)]})
     solid_wt_updated = fields.Boolean('Solid Wt Updated')
-    scrap_percent = fields.Float('% Scrap', compute='compute_scrap_percent', digits=(16,2))
 
     @api.one
     @api.constrains('wire_date')
@@ -719,29 +705,40 @@ class OperationDetailLine(models.Model):
         return super(OperationDetailLine, self).unlink()
 
 
-class StockPicking(models.Model):
-    _inherit = 'stock.picking'
+# class MrpSubProduct(models.Model):
+#     _inherit = 'mrp.subproduct'
 
-    @api.depends('move_lines', 'move_lines.product_uom_qty', 'move_lines.state')
-    def _qty_all_lines(self):
-        for picking in self:
-            total_qty = 0.00
-            for line in picking.move_lines:
-                if line.state == 'done':
-                    total_qty += line.product_uom_qty
-            picking.total_qty = total_qty
-
-    total_qty = fields.Float('Total Quantity', default=0.00,
-        compute='_qty_all_lines', store=True,
-        digits=dp.get_precision('Product Unit of Measure'))
+#     editable = fields.Boolean('Editable', default=False)
 
 
-class SaleOrder(models.Model):
-    _inherit = 'sale.order'
+# class StockMove(models.Model):
+#     _inherit = 'stock.move'
 
-    scrap_order = fields.Selection(
-        [('Yes','Yes'),
-         ('No', 'No')], string='Scrap Order',
-         readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]},
-         default=False)
+#     @api.multi
+#     def _compute_editable(self):
+#         print "_compute_editable========"
+#         for mv in self:
+#             for sub_product_line in mv.production_id.bom_id.sub_products:
+#                 if sub_product_line.product_id.id == mv.product_id.id and sub_product_line.editable:
+#                     mv.editable = True
 
+#     editable = fields.Boolean('Editable', default=False, compute='_compute_editable')
+
+
+# class MrpProductProduceInh(models.TransientModel):
+#     _inherit = "mrp.product.produce"
+    
+
+#     @api.multi
+#     def do_produce(self):
+#         res = super(MrpProductProduceInh, self).do_produce()
+#         if self.production_id.weighted_wire_lines:
+#             for wrl in self.production_id.weighted_wire_lines:
+#                 wrl.state = 'done'
+#         if self.production_id.packaging_lines:
+#             for pl in self.production_id.packaging_lines:
+#                 pl.state = 'done'
+#         if self.production_id.operation_lines:
+#             for ol in self.production_id.operation_lines:
+#                 ol.state = 'done'
+#         return res

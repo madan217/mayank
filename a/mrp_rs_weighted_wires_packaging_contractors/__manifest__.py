@@ -22,9 +22,7 @@
         'views/mrp_config_settings_views.xml',
         'views/mrp_view.xml',
         'wizard/contractor_cost.xml',
-        'wizard/production_details.xml',
-        'wizard/complete_production.xml',
-        'wizard/scrap_percent.xml'
+        'wizard/production_details.xml'
         ],
 	'images' : [],
  	'demo': [],

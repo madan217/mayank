@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_production_details_wizard" model="ir.ui.view">
+            <field name="name">production.details.wizard</field>
+            <field name="model">report.mrp_rs_weighted_wires_packaging_contractors.mopd</field>
+            <field name="arch" type="xml">
+                <form string="Contractor Cost">
+                    <group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="product_id" required="1"/>
+                        </group>
+                        <group>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="print_production_details" type="object" string="Print" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="act_production_details_wizard" model="ir.actions.act_window">
+            <field name="name">Production Details</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">report.mrp_rs_weighted_wires_packaging_contractors.mopd</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="context">{}</field>
+            <field name="target">new</field>
+        </record>
+
+         <menuitem id="menu_production_details_wizard"
+          name="Production Details"
+          parent="mrp.menu_mrp_reporting"
+          action="act_production_details_wizard"
+          sequence="10"/>
+
+        <template id="mopd">
+                <t t-call="report.html_container">
+                    <t t-call="report.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <div class="row mt0">
+                            <div class="col-xs-12 text-center">
+                                    <h2>Production Details</h2>
+                            </div>
+                        </div>
+
+                            <div class="row mt16 mb16" id="informations">
+                                <div t-if="data['product_id']" class="col-xs-3 text-center" >
+                                    <strong>Product: </strong>
+                                    <p t-esc="data['product_id'][1]"/>
+                                </div>
+                                <div class="col-xs-3 text-center">
+                                    <strong>Period: </strong>
+                                    <p><span t-esc="data['start_date']" t-options='{"widget": "date", "format": "dd/MM/yyyy"}'/> -  <span t-esc="data['end_date']" t-options='{"widget": "date", "format": "dd/MM/yyyy"}'/></p>
+                                </div>
+                            </div>
+                            <table class="table table-condensed">
+                                <thead>
+                                    
+                               </thead>
+                               <tbody class="sale_tbody">
+                                        <t t-set="count" t-value="int(1)"/>
+                                        <t t-set="count2" t-value="int(1)"/>
+                                        
+                                        <t t-foreach="data['pids']" t-as="l">
+                                            <!-- <tr> -->
+                                                
+                                                
+                                                <t t-if="count">
+
+                                                    <tr>
+                                                        <td class="text-center">
+                                                            <strong>Date</strong></td>
+                                                        <t t-foreach="l[1]" t-as="l2">
+                                                            <td class="text-center"><strong><span t-esc="l2[1]"/></strong></td>
+                                                        </t>
+                                                        <t t-set="count" t-value="int(0)"/>
+                                                    </tr>
+                                                </t>
+                                                <tr>
+                                                    <td class="text-center"><span t-esc="l[0]" t-options='{"widget": "date", "format": "dd/MM/yyyy"}'/></td>
+                                                    <t t-foreach="l[1]" t-as="l2">
+                                                        <td class="text-center"><span t-esc="l2[3]"/></td>
+                                                    </t>
+                                                    <t t-set="count" t-value="int(0)"/>
+                                                </tr>
+
+                                                
+                                                
+                                                
+                                                <!-- <td class="text-center">
+                                                    <span t-esc="l['mo']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['product_id']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['qty']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['rate']"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-esc="l['total']"/>
+                                                </td> -->
+                                            <!-- </tr> -->
+                                        </t>
+
+                                        <t t-foreach="data['pids']" t-as="l">
+                                            <tr class="border-black" style="height:20px;">
+                                                <t t-if="count2">
+
+                                                        <tr class="border-black">
+                                                            <td class="text-center">
+                                                                <strong></strong></td>
+                                                            <t t-foreach="l[1]" t-as="l2">
+                                                                <td class="text-center"><strong><span t-esc="data['totalDict'][str(l2[0])]"/></strong></td>
+                                                            </t>
+                                                            <t t-set="count2" t-value="int(0)"/>
+                                                        </tr>
+                                                    </t>
+                                    
+                                            </tr>
+                                        </t>
+
+                                </tbody>
+                            </table>
+                    </div>
+                </t>
+                </t>
+            </template>
+
+
+          <report 
+            id="action_production_details"
+            string="Production Details"
+            model="report.mrp_rs_weighted_wires_packaging_contractors.mopd" 
+            report_type="qweb-pdf"
+            file="mrp_rs_weighted_wires_packaging_contractors.mopd" 
+            name="mrp_rs_weighted_wires_packaging_contractors.mopd" 
+        />
+</odoo>
+

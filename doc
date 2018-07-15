@@ -1,0 +1,32 @@
+
+Date : 22 may
+
+Few more things:
+
+a) The current date not picking up in tabs and is still visible in my machine. Please find screenshots of adding a new line in edit mode. You can see date picked is of 19/05/2018, but today is 22nd. Kindly see what can be the issue.
+
+b) I would like to add another radio button in BOM form - "Open/Counter". If this is selected in any BOM, the MO will open a tab similar to Packaging Details. But the name would be "Operation Details". Please check I gave name "BOM Criteria" to this radio button section and change in your code too. See screenshot.
+
+This tab "Operation Details" will have similar features like before - columns will be :
+
+--- Date , Performed by (text field), Quantity (default 0), Approve button. All fields mandatory.
+
+c) This Quantity, on click of Approve will update the "Qty to Produce" just like we did for wire/packaging tab. `Sum of all lines will be the check.
+
+d) Also, another condition to be added, if BOM radio button value is Not "None" i.e. if the selected radio button is not None but any of other three then the "Update" button in front of "Qty to Produce" in MO should be hidden/disabled. The button will only work/appear in case of "None" as BOM Criteria.
+
+e) Also, the Produce button should not produce if the any of raw material is not fully available. If the raw material check is there user should not be able to force produce. Please hide the button for Produce until all components are available.
+
+f) Create another view like Contractor - name would be "Contractor Rates". Columns would be :
+
+-- Product (variant) - dropdown - values will be all Products whose BOM Criteria has radio button "Polished/Packed" selected.
+
+-- Polish Rate (per piece) Default 0, 2 decimals
+
+-- Packaging Rate (per piece)  Default 0, 2 Decimals
+
+-- Start Date & End Date
+
+-- Active (Default true)
+
+****All fields Mandatory except Dates
