@@ -8,6 +8,7 @@
                     <group>
                         <group>
                             <field name="start_date"/>
+                            <field name="scrap_so_date" widget="date"/>
                         </group>
                         <group>
                             <field name="end_date"/>

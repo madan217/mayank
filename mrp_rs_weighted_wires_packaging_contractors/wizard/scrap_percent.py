@@ -13,6 +13,7 @@ class ScrapPercentWizard(models.TransientModel):
 
     start_date = fields.Date('Start Date', required=True)
     end_date = fields.Date('End Date', required=True)
+    scrap_so_date = fields.Datetime('Scrap SO Date', required=True)
 
     @api.multi
     def get_report_data(self):
@@ -33,16 +34,17 @@ class ScrapPercentWizard(models.TransientModel):
         total_scrap = 0.0
         for mv in moveIds:
             total_consumed += mv.quantity_done
+        print "scrap_so_date========",self.scrap_so_date
         soIds = self.env['sale.order'].search([
-            ('confirmation_date', '>=', self.start_date + ' ' + '00:00:00'),
-            ('confirmation_date', '<=', self.end_date + ' ' + '23:59:59'),
+            ('confirmation_date', '>=', self.scrap_so_date + ' ' + '00:00:00'),
+            ('confirmation_date', '<=', self.scrap_so_date + ' ' + '23:59:59'),
             ('scrap_order', '=', 'Yes'),
-            ('state', '=', 'done')])
+            ('state', 'in', ['sale','done'])])
+        print "scrap_so_date========",self.scrap_so_date
         for so in soIds:
             for line in so.order_line:
                 # assign product template ids here i have given 10,25
-                if line.product_id.product_tmpl_id.id in [10,25]:
-                    total_scrap += line.product_uom_qty
+                total_scrap += line.product_uom_qty
         scrap_percent = round(((total_scrap / total_consumed) * 100),2)
         resIds = self.read(
             ['start_date', 'end_date'])[0]

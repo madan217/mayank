@@ -727,8 +727,7 @@ class StockPicking(models.Model):
         for picking in self:
             total_qty = 0.00
             for line in picking.move_lines:
-                if line.state == 'done':
-                    total_qty += line.product_uom_qty
+                total_qty += line.product_uom_qty
             picking.total_qty = total_qty
 
     total_qty = fields.Float('Total Quantity', default=0.00,
@@ -744,4 +743,7 @@ class SaleOrder(models.Model):
          ('No', 'No')], string='Scrap Order',
          readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]},
          default=False)
+
+
+
 

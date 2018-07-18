@@ -34,23 +34,9 @@ class CompleteProductionWizard(models.TransientModel):
         attribute_ids = []
         # assign Raw template id exm:39 
         raw_variants = ProductObj.search([('product_tmpl_id', '=', 39)])
-        for var in raw_variants:
-            D['1900-01-01'].append((var.id,
-                                 var.attribute_value_ids.ids[0],
-                                var.display_name,
-                                0))
-            for attr in var.attribute_value_ids:
-                attribute_ids.append(attr.id)
         #assign Counter template id exm: 40
         counter_variants = ProductObj.search([('product_tmpl_id', '=', 40)])
-        for cvar in counter_variants:
-            D['1900-01-01'].append((cvar.id,
-                                 cvar.attribute_value_ids.ids[0],
-                                cvar.display_name,
-                                0))
-            for cattr in cvar.attribute_value_ids:
-                attribute_ids.append(cattr.id)
-        attribute_ids = list(set(attribute_ids))
+ 
         wireLineObj = self.env['weighted.wire.line']
         wire_ids = wireLineObj.search([
             ('wire_date', '>=', self.from_date),
@@ -60,8 +46,10 @@ class CompleteProductionWizard(models.TransientModel):
         for wire_id in wire_ids:
             D[wire_id.wire_date].append((wire_id.mo_id.product_id.id,
                                         wire_id.mo_id.product_id.attribute_value_ids.ids[0],
-                                        wire_id.mo_id.product_id.display_name,
+                                        wire_id.mo_id.product_id.name,
                                         wire_id.qty_produced))
+            attribute_ids.append(wire_id.mo_id.product_id.attribute_value_ids.ids[0])
+
         counterLineObj = self.env['operation.detail.line']
         counter_ids = counterLineObj.search([
             ('operation_date', '>=', self.from_date),
@@ -71,10 +59,16 @@ class CompleteProductionWizard(models.TransientModel):
         for counter_id in counter_ids:
             D[counter_id.operation_date].append((counter_id.mo_id.product_id.id,
                                         counter_id.mo_id.product_id.attribute_value_ids.ids[0],
-                                        counter_id.mo_id.product_id.display_name,
+                                        counter_id.mo_id.product_id.name,
                                         counter_id.qty))
+            attribute_ids.append(counter_id.mo_id.product_id.attribute_value_ids.ids[0])
+
+        attribute_ids = list(set(attribute_ids))
         pickingObj = self.env['stock.picking']
+        max_dict = 0
+        print "dict d===============", dict(D).items()
         for k, v in dict(D).items():
+
             kdate = k + ' ' + '00:00:00'
             kend = k + ' ' + '23:59:59'
             total = 0.0
@@ -103,8 +97,13 @@ class CompleteProductionWizard(models.TransientModel):
                 
                 l.append((key[0],key[1],key[2], total_qty))
             l.append([total_raw,total_counter,total])
+            if len(l) > max_dict:
+                D['1900-01-01'] = l
+                max_dict = len(l)
             D[k] = l
+        print "dl==================",dict(D)
         O = sorted(D.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d'))
+        print "o==================",O
         return O, attribute_ids
 
     @api.multi
@@ -121,19 +120,19 @@ class CompleteProductionWizard(models.TransientModel):
         if self.id:
             workbook = xlwt.Workbook()
             worksheet = workbook.add_sheet('Sheet 1', cell_overwrite_ok=True)
-            worksheet.col(0).width = 10000
-            worksheet.col(1).width = 7000
-            worksheet.col(2).width = 7000
-            worksheet.col(3).width = 7000
-            worksheet.col(4).width = 7000
-            worksheet.col(5).width = 7000
-            worksheet.col(6).width = 7000
-            worksheet.col(7).width = 7000
-            worksheet.col(8).width = 7000
-            worksheet.col(9).width = 7000
-            worksheet.col(10).width = 7000
-            worksheet.col(11).width = 7000
-            worksheet.col(12).width = 7000
+            # worksheet.col(0).width = 10000
+            # worksheet.col(1).width = 7000
+            # worksheet.col(2).width = 7000
+            # worksheet.col(3).width = 7000
+            # worksheet.col(4).width = 7000
+            # worksheet.col(5).width = 7000
+            # worksheet.col(6).width = 7000
+            # worksheet.col(7).width = 7000
+            # worksheet.col(8).width = 7000
+            # worksheet.col(9).width = 7000
+            # worksheet.col(10).width = 7000
+            # worksheet.col(11).width = 7000
+            # worksheet.col(12).width = 7000
             worksheet.row(0).height = 400
             # worksheet.row(5).height = 00
             columns_center_bold_style = xlwt.easyxf('font:height 220; align: wrap on, horiz center; font: bold on; pattern: pattern solid, fore_colour white; border: top thin, right thin, bottom thin, left thin;')
@@ -149,15 +148,21 @@ class CompleteProductionWizard(models.TransientModel):
             
             worksheet.write_merge(0,1,0,9, 'Complete Production Report From %s to %s'%(datetime.strptime(self.from_date, '%Y-%m-%d').strftime('%d/%m/%Y'), str(datetime.strptime(self.to_date, '%Y-%m-%d').strftime('%d/%m/%Y'))), style_so)
             data_dict, attribute_ids = self.get_lines()
+            attObj = self.env['product.attribute.value']
             if attribute_ids:
                 worksheet.write(7,0, 'Date', columns_center_bold_style)
                 count_check = True
                 header_col = 0
                 colPid = []
+
                 for data in data_dict:
                     if data[0] == '1900-01-01':
+                        print "==========="
+
                         for at in attribute_ids:
-                            for pdata in data[1]:
+
+                            worksheet.write_merge(5,6,header_col+1,header_col+2,attObj.browse(at).name,columns_center_bold_style)
+                            for pdata in sorted(data[1], key=lambda x: x[2],reverse=True):
                                 if isinstance(pdata, (tuple)):
                                     if at == pdata[1]:
                                         header_col += 1
