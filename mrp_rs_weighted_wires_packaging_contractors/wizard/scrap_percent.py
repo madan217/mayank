@@ -13,7 +13,7 @@ class ScrapPercentWizard(models.TransientModel):
 
     start_date = fields.Date('Start Date', required=True)
     end_date = fields.Date('End Date', required=True)
-    scrap_so_date = fields.Datetime('Scrap SO Date', required=True)
+    scrap_so_date = fields.Date('Scrap SO Date', required=True)
 
     @api.multi
     def get_report_data(self):

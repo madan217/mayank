@@ -33,16 +33,16 @@ class CompleteProductionWizard(models.TransientModel):
         D = defaultdict(list)
         attribute_ids = []
         # assign Raw template id exm:39 
-        raw_variants = ProductObj.search([('product_tmpl_id', '=', 39)])
+        raw_variants = ProductObj.search([('product_tmpl_id', '=', 19)])
         #assign Counter template id exm: 40
-        counter_variants = ProductObj.search([('product_tmpl_id', '=', 40)])
+        counter_variants = ProductObj.search([('product_tmpl_id', '=', 31)])
  
         wireLineObj = self.env['weighted.wire.line']
         wire_ids = wireLineObj.search([
             ('wire_date', '>=', self.from_date),
             ('wire_date', '<=', self.to_date),
             ('state', '=', 'done'),
-            ('mo_id.product_id.product_tmpl_id.id', '=', 39)]) # assign for Raw Template exm:39
+            ('mo_id.product_id.product_tmpl_id.id', '=', 19)]) # assign for Raw Template exm:39
         for wire_id in wire_ids:
             D[wire_id.wire_date].append((wire_id.mo_id.product_id.id,
                                         wire_id.mo_id.product_id.attribute_value_ids.ids[0],
@@ -55,7 +55,7 @@ class CompleteProductionWizard(models.TransientModel):
             ('operation_date', '>=', self.from_date),
             ('operation_date', '<=', self.to_date),
             ('state', '=', 'done'),
-            ('mo_id.product_id.product_tmpl_id.id', '=', 40)]) # assign for Counter Template exm:40
+            ('mo_id.product_id.product_tmpl_id.id', '=', 31)]) # assign for Counter Template exm:40
         for counter_id in counter_ids:
             D[counter_id.operation_date].append((counter_id.mo_id.product_id.id,
                                         counter_id.mo_id.product_id.attribute_value_ids.ids[0],
@@ -67,6 +67,7 @@ class CompleteProductionWizard(models.TransientModel):
         pickingObj = self.env['stock.picking']
         max_dict = 0
         print "dict d===============", dict(D).items()
+        header_list = []
         for k, v in dict(D).items():
 
             kdate = k + ' ' + '00:00:00'
@@ -94,13 +95,11 @@ class CompleteProductionWizard(models.TransientModel):
                         total_raw += r[3]
                     elif key[0] in counter_variants.ids:
                         total_counter += r[3]
-                
+                header_list.append((key[0],key[1],key[2], 0.0))
                 l.append((key[0],key[1],key[2], total_qty))
             l.append([total_raw,total_counter,total])
-            if len(l) > max_dict:
-                D['1900-01-01'] = l
-                max_dict = len(l)
             D[k] = l
+        D['1900-01-01'] = list(set(header_list))
         print "dl==================",dict(D)
         O = sorted(D.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d'))
         print "o==================",O
@@ -143,7 +142,7 @@ class CompleteProductionWizard(models.TransientModel):
             xlwt.add_palette_colour("eunry", 0x21)
             workbook.set_colour_RGB(0x21, 201, 165, 165)
             style = xlwt.easyxf('font:bold on, color 0x28; align: horiz center; align: vert centre; font:height 350; pattern: pattern solid, fore_colour white;border: top thin, right thin, bottom thin, left thin;')
-            style_so = xlwt.easyxf('font:bold on; align: horiz left; align: vert centre; font:height 450; pattern: pattern solid, fore_colour white;border: top thin, right thin, bottom thin, left thin;')
+            style_so = xlwt.easyxf('font:bold on; align: horiz left; align: vert centre; font:height 250; pattern: pattern solid, fore_colour white;border: top thin, right thin, bottom thin, left thin;')
             style_qty = xlwt.easyxf('font:bold on, color 0x28; align: horiz left; align: vert centre; font:height 200; pattern: pattern solid, fore_colour white;border: top thin, right thin, bottom thin, left thin;')
             
             worksheet.write_merge(0,1,0,9, 'Complete Production Report From %s to %s'%(datetime.strptime(self.from_date, '%Y-%m-%d').strftime('%d/%m/%Y'), str(datetime.strptime(self.to_date, '%Y-%m-%d').strftime('%d/%m/%Y'))), style_so)
@@ -154,24 +153,31 @@ class CompleteProductionWizard(models.TransientModel):
                 count_check = True
                 header_col = 0
                 colPid = []
-
                 for data in data_dict:
                     if data[0] == '1900-01-01':
                         print "==========="
-
                         for at in attribute_ids:
-
-                            worksheet.write_merge(5,6,header_col+1,header_col+2,attObj.browse(at).name,columns_center_bold_style)
+                            merge_count = 0
                             for pdata in sorted(data[1], key=lambda x: x[2],reverse=True):
                                 if isinstance(pdata, (tuple)):
                                     if at == pdata[1]:
+                                        merge_count += 1
                                         header_col += 1
                                         print "pdata========",pdata
                                         colPid.append((pdata[0],pdata[1],))
+                                        worksheet.col(header_col).width = 4000
                                         worksheet.write(7,header_col, pdata[2], columns_center_bold_style)
+                            if merge_count == 2:
+                                worksheet.write_merge(5,6,header_col-1,header_col,attObj.browse(at).name,columns_center_bold_style)
+                            elif merge_count == 1:
+                                print "attObj.browse(at).name===",attObj.browse(at).name
+                                worksheet.write_merge(5,6,header_col,header_col,attObj.browse(at).name,columns_center_bold_style)
                         print "colpid===========",colPid
+                        worksheet.col(header_col+1).width = 4000
                         worksheet.write(7,header_col+1, 'Total Raw', columns_center_bold_style)
+                        worksheet.col(header_col+2).width = 4000
                         worksheet.write(7,header_col+2, 'Total Counter', columns_center_bold_style)
+                        worksheet.col(header_col+3).width = 4000
                         worksheet.write(7,header_col+3, 'Dispatched', columns_center_bold_style)
                         break
                 row = 8
@@ -182,7 +188,6 @@ class CompleteProductionWizard(models.TransientModel):
                     if data2[0] != '1900-01-01':
                         col = 0
                         match_col = []
-                        print "row================",row
                         worksheet.write(row,col, datetime.strptime(data2[0], '%Y-%m-%d')\
                                 .strftime('%d/%m/%Y'), columns_center_style)
                         for at2 in attribute_ids:

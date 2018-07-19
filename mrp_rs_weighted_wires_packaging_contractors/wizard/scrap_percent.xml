@@ -8,7 +8,7 @@
                     <group>
                         <group>
                             <field name="start_date"/>
-                            <field name="scrap_so_date" widget="date"/>
+                            <field name="scrap_so_date"/>
                         </group>
                         <group>
                             <field name="end_date"/>
@@ -52,8 +52,8 @@
                             <table class="table table-condensed">
                                 <thead>
                                     <tr>
-                                        <th>Total Scrap</th>
-                                        <th class="text-center">Total Consumed</th>
+                                        <th>Total Scrap (kg)</th>
+                                        <th class="text-center">Total Consumed (kg)</th>
                                         <th class="text-center">Scrap %</th>
                                     </tr>
                                </thead>
