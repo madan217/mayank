@@ -14,6 +14,15 @@
                             </tree>
                         </field>
                       </page>
+                    <page string="Day Time">
+                        <field name="allow_time">
+                            <tree editable="bottom">
+                                <field name="access_day"/>
+                                <field name="access_start_time"/>
+                                <field name="access_end_time"/>
+                            </tree>
+                        </field>
+                      </page>
                 </xpath>
             </field>
         </record>

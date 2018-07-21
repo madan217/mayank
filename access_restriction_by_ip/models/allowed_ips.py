@@ -21,6 +21,7 @@
 #
 ##############################################################################
 from odoo import models, fields
+import time
 
 
 class ResUsersInherit(models.Model):
@@ -39,6 +40,14 @@ class AllowedTime(models.Model):
     _name = 'allowed.time'
 
     user_id = fields.Many2one('res.users', string='User')
-    access_day = fields.Many2one('res.users', string='Day')
+    access_day = fields.Selection([
+        ('0', 'Monday'),
+        ('1', 'Tuesday'),
+        ('2', 'Wednesday'),
+        ('3', 'Thursday'),
+        ('4', 'Friday'),
+        ('5', 'Saturday'),
+        ('6', 'Sunday')], string='Day',
+        )
     access_start_time = fields.Char(string='Start Time')
     access_end_time = fields.Char('End Time')
