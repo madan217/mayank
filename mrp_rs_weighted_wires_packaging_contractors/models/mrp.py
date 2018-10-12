@@ -496,8 +496,8 @@ class weightedWireLine(models.Model):
     def _check_wire_date(self):
         selectDate = datetime.strptime(self.wire_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
-        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        pastdays = self.env['mrp.days'].search([])[0].past_days
+        future_days = self.env['mrp.days'].search([])[0].future_days
         if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))
@@ -617,8 +617,8 @@ class packagingLine(models.Model):
     def _check_package_date(self):
         selectDate = datetime.strptime(self.package_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
-        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        pastdays = self.env['mrp.days'].search([])[0].past_days
+        future_days = self.env['mrp.days'].search([])[0].future_days
         if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))
@@ -695,8 +695,8 @@ class OperationDetailLine(models.Model):
     def _check_operation_date(self):
         selectDate = datetime.strptime(self.operation_date, DF) #fields.Date.today()
         today = datetime.strptime(fields.Date.context_today(self), DF)
-        pastdays = self.env['ir.values'].get_default('mrp.config.settings', 'past_days')
-        future_days = self.env['ir.values'].get_default('mrp.config.settings', 'future_days')
+        pastdays = self.env['mrp.days'].search([])[0].past_days
+        future_days = self.env['mrp.days'].search([])[0].future_days
         if (not pastdays) and (not future_days) and (selectDate != today):
             raise ValidationError(_('Date must be today date'))
         pastDate = today + timedelta(days=int(-pastdays))

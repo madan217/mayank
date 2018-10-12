@@ -20,7 +20,7 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from odoo import models, fields
+from odoo import models, fields, api
 import time
 
 
@@ -29,6 +29,19 @@ class ResUsersInherit(models.Model):
 
     allowed_ips = fields.One2many('allowed.ips', 'users_ip', string='IP')
     allow_time = fields.One2many('allowed.time', 'user_id', string='Access Time')
+
+    @api.model
+    def create(self, vals):
+        res = super(ResUsersInherit, self).create(vals)
+        alltimeObj = self.env['allowed.time']
+        if res:
+            for r in range(7):
+                alltimeObj.create({
+                    'user_id' : res.id,
+                    'access_day' : str(r)
+                    })
+        return res
+
 
 class AllowedIPs(models.Model):
     _name = 'allowed.ips'

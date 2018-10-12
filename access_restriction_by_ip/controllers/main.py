@@ -27,7 +27,7 @@ import odoo
 import odoo.modules.registry
 from odoo.tools.translate import _
 from odoo import http, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from pytz import timezone
 import pytz
@@ -45,11 +45,11 @@ class Home(main.Home):
             request.uid = odoo.SUPERUSER_ID
         indiatm = pytz.timezone('Asia/Kolkata')
         values = request.params.copy()
-        current_datetime = datetime.now().replace(tzinfo=pytz.timezone('UTC')).astimezone(indiatm)
+        # system date is behind 1 day, handle it by adding 1 day
+        current_datetime = (datetime.now() + timedelta(days=1)).replace(tzinfo=pytz.timezone('UTC')).astimezone(indiatm)
+        current_time = datetime.strptime(current_datetime.strftime('%H:%M'), '%H:%M').time()
         print "cuurent date time=========",current_datetime
         current_day = current_datetime.weekday()
-        current_hour = current_datetime.hour
-        current_min = current_datetime.minute
         try:
             values['databases'] = http.db_list()
         except odoo.exceptions.AccessDenied:
@@ -58,7 +58,6 @@ class Home(main.Home):
             old_uid = request.uid
             ip_address = request.httprequest.environ['REMOTE_ADDR']
             print "ip address=============",ip_address
-            print "datetime===",current_day,current_hour,current_min
             if request.params['login']:
                 user_rec = request.env['res.users'].sudo().search([('login', '=', request.params['login'])])
                 if user_rec.allowed_ips:
@@ -70,15 +69,12 @@ class Home(main.Home):
                             for rec_time in user_rec.allow_time:
 
                                 if rec_time.access_day and rec_time.access_start_time and rec_time.access_end_time:
-                                    print rec_time.access_start_time.split(':')[0],current_hour
-                                    print int(rec_time.access_start_time.split(':')[1]),current_min
-                                    print int(rec_time.access_end_time.split(':')[0]),current_hour
-                                    print int(rec_time.access_end_time.split(':')[1]),current_min
+                                    print "current_datetime=======",current_time
+                                    print "==========",datetime.strptime(rec_time.access_start_time.strip(), '%H:%M').time()
+                                    print "end=============",datetime.strptime(rec_time.access_end_time.strip(), '%H:%M').time()
                                     if (int(rec_time.access_day) == int(current_day) and
-                                        int(rec_time.access_start_time.split(':')[0]) <= current_hour and
-                                        int(rec_time.access_start_time.split(':')[1]) <= current_min and
-                                        int(rec_time.access_end_time.split(':')[0]) >= current_hour and
-                                        int(rec_time.access_end_time.split(':')[1]) >= current_min):
+                                        datetime.strptime(rec_time.access_start_time.strip(), '%H:%M').time() <= current_time and
+                                        datetime.strptime(rec_time.access_end_time.strip(), '%H:%M').time() >= current_time):
                                         uid = request.session.authenticate(request.session.db, request.params['login'], request.params['password'])
                                         print "if============="
                                         if uid is not False:
@@ -91,6 +87,25 @@ class Home(main.Home):
                                     values['error'] = _("at this Time")
                     request.uid = old_uid
                     values['error'] = _("Not allowed to login from this IP") + ' ' + values.get('error','')
+                elif user_rec.allow_time:
+                    for rec_time in user_rec.allow_time:
+                        if rec_time.access_day and rec_time.access_start_time and rec_time.access_end_time:
+                            print "current_datetime=======",current_time
+                            print "==========",datetime.strptime(rec_time.access_start_time.strip(), '%H:%M').time()
+                            print "end=============",datetime.strptime(rec_time.access_end_time.strip(), '%H:%M').time()
+                            if (int(rec_time.access_day) == int(current_day) and
+                                        datetime.strptime(rec_time.access_start_time.strip(), '%H:%M').time() <= current_time and
+                                        datetime.strptime(rec_time.access_end_time.strip(), '%H:%M').time() >= current_time):
+                                uid = request.session.authenticate(request.session.db, request.params['login'], request.params['password'])
+                                print "if============="
+                                if uid is not False:
+                                    request.params['login_success'] = True
+                                    if not redirect:
+                                        redirect = '/web'
+                                    return http.redirect_with_hash(redirect)
+                                request.uid = old_uid
+                                values['error'] = _("Wrong login/password")
+                            values['error'] = _("Your are not allowed to login at this Time")
                 else:
                     uid = request.session.authenticate(request.session.db, request.params['login'],
                                                        request.params['password'])
